@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Why Concepts?實例分析Function overload by type當我們需要一個函數toString，傳入一個參數，Pseudo Code大概是這樣 123456789template &lt;typename T&gt;std::string toString(const T&amp; input)&amp;#123;    if (input have toString member">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Concept in C++20">
+<meta property="og:url" content="http://yoursite.com/2020/03/20/Concept-in-C-20/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="Why Concepts?實例分析Function overload by type當我們需要一個函數toString，傳入一個參數，Pseudo Code大概是這樣 123456789template &lt;typename T&gt;std::string toString(const T&amp; input)&amp;#123;    if (input have toString member">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-03-20T22:02:05.000Z">
+<meta property="article:modified_time" content="2021-07-15T01:00:31.840Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2020/03/20/Concept-in-C-20/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Concept in C++20 | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">第十三號艦隊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/20/Concept-in-C-20/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Concept in C++20
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-03-20 22:02:05" itemprop="dateCreated datePublished" datetime="2020-03-20T22:02:05+00:00">2020-03-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 01:00:31" itemprop="dateModified" datetime="2021-07-15T01:00:31+00:00">2021-07-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Why-Concepts"><a href="#Why-Concepts" class="headerlink" title="Why Concepts?"></a>Why Concepts?</h2><h3 id="實例分析"><a href="#實例分析" class="headerlink" title="實例分析"></a>實例分析</h3><h4 id="Function-overload-by-type"><a href="#Function-overload-by-type" class="headerlink" title="Function overload by type"></a>Function overload by type</h4><p>當我們需要一個函數toString，傳入一個參數，Pseudo Code大概是這樣</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">toString</span><span class="params">(<span class="keyword">const</span> T&amp; input)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (input have toString member function) &#123;</span><br><span class="line">        <span class="keyword">return</span> input.toString();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"unknown format"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>該怎麼做</p>
+<h4 id="C-98-Way"><a href="#C-98-Way" class="headerlink" title="C++98 Way"></a>C++98 Way</h4><p>看看就好, 這手法現在也不需要理解了, 太舊了</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">has_toString</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">char</span> Yes;</span><br><span class="line">    <span class="keyword">typedef</span> Yes No[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> U, U&gt; <span class="class"><span class="keyword">struct</span> <span class="title">really_has</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> C&gt; <span class="function"><span class="keyword">static</span> Yes&amp; <span class="title">Test</span><span class="params">(really_has &lt;<span class="built_in">std</span>::<span class="built_in">string</span>(C::*)() <span class="keyword">const</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">        &amp;C::toString&gt;*)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span>&gt; <span class="function"><span class="keyword">static</span> No&amp; <span class="title">Test</span><span class="params">(...)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">bool</span> <span class="keyword">const</span> value = <span class="keyword">sizeof</span>(Test&lt;T&gt;(<span class="number">0</span>)) == <span class="keyword">sizeof</span>(Yes);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">bool</span> B, <span class="class"><span class="keyword">class</span> <span class="title">T</span> = <span class="title">void</span>&gt; // <span class="title">Default</span> <span class="title">template</span> <span class="title">version</span>.</span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">enable_if</span> &#123;</span>&#125;; <span class="comment">// This struct doesn't define "type" and the substitution will fail if you try to access it.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; // <span class="title">A</span> <span class="title">specialisation</span> <span class="title">used</span> <span class="title">if</span> <span class="title">the</span> <span class="title">expression</span> <span class="title">is</span> <span class="title">true</span>. </span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">enable_if</span>&lt;true, T&gt; &#123;</span> <span class="keyword">typedef</span> T type; &#125;; <span class="comment">// This struct do have a "type" and won't fail on access.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">toString</span><span class="params">(<span class="keyword">const</span> T&amp; input, <span class="keyword">typename</span> enable_if&lt;has_toString&lt;T&gt;::value, <span class="keyword">int</span>&gt;::type t = <span class="number">0</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> input.toString();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">toString</span><span class="params">(<span class="keyword">const</span> T&amp; input, <span class="keyword">typename</span> enable_if&lt;!has_toString&lt;T&gt;::value, <span class="keyword">int</span>&gt;::type t = <span class="number">0</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"unknown format"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我想你不會懷念他的<br>幾個缺點<br>– 沒有<code>type_traits</code>，所以enable_if之類的要自己寫<br>– 每增加一個Signature偵測，就要多個類似<code>has_toString</code>的東西出現<br>– Function overload的signagure要修改<br>– 奇醜無比</p>
+<h4 id="C-11-Way"><a href="#C-11-Way" class="headerlink" title="C++11 Way"></a>C++11 Way</h4><p>僅列出跟C++98不同的地方</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">has_toString</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">char</span> Yes;</span><br><span class="line">    <span class="keyword">typedef</span> Yes No[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> C&gt; <span class="keyword">static</span> <span class="keyword">auto</span> <span class="title">Test</span><span class="params">(<span class="keyword">void</span>*)</span></span></span><br><span class="line">        -&gt; decltype(std::string&#123; std::declval&lt;C const&gt;().toString() &#125;, Yes&#123;&#125;);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span>&gt; <span class="keyword">static</span> No&amp; <span class="title">Test</span><span class="params">(...)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">bool</span> <span class="keyword">const</span> value = <span class="keyword">sizeof</span>(Test&lt;T&gt;(<span class="number">0</span>)) == <span class="keyword">sizeof</span>(Yes);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> <span class="built_in">std</span>::enable_if&lt;has_toString&lt;T&gt;::value, <span class="keyword">int</span>&gt;::type t = <span class="number">0</span>&gt;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> toString(<span class="keyword">const</span> T&amp; input)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> input.toString();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> <span class="built_in">std</span>::enable_if&lt;!has_toString&lt;T&gt;::value, <span class="keyword">int</span>&gt;::type t = <span class="number">0</span>&gt;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> toString(<span class="keyword">const</span> T&amp; input)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"unknown format"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>基本上差不了多少，不過現在不用修改toString的Signature，順眼多了<br>C++14之後的更新基本上不可用，MSVC不支援，就不列出了</p>
+<h4 id="Boost-Hana-Solution"><a href="#Boost-Hana-Solution" class="headerlink" title="Boost Hana Solution"></a>Boost Hana Solution</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> has_toString = boost::hana::is_valid([](<span class="keyword">auto</span>&amp;&amp; obj) -&gt; <span class="keyword">decltype</span>(obj.toString()) &#123; &#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">toString</span><span class="params">(T <span class="keyword">const</span>&amp; obj)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> boost::hana::if_(has_toString(obj),</span><br><span class="line">        [] (<span class="keyword">auto</span>&amp; x) &#123; <span class="keyword">return</span> x.toString(); &#125;,</span><br><span class="line">        [] (<span class="keyword">auto</span>&amp; x) &#123; <span class="keyword">return</span> <span class="string">"unknown format"</span>; &#125;</span><br><span class="line">    )(obj);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這基本上就很接近我們的Pseudo code，不過還要額外的Hana dependency</p>
+<h4 id="C-17"><a href="#C-17" class="headerlink" title="C++17"></a>C++17</h4><p>C++14之後的更新基本上不可用，MSVC不支援，就不列出了<br>不過我們可以用<code>if constexpr</code>把兩個 toString合併成一個</p>
+<h4 id="Think-more"><a href="#Think-more" class="headerlink" title="Think more"></a>Think more</h4><p>我們只是檢查一個條件<code>toString</code>，如果有復合的條件約束的話該怎麼辦, 假設我們還要檢查一個<code>ver</code>的member variable或者這個typeu定義了一個value_type，上面的方式就變得無力</p>
+<h4 id="C-20-Concept-Solution"><a href="#C-20-Concept-Solution" class="headerlink" title="C++ 20 Concept Solution"></a>C++ 20 Concept Solution</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> has_toString = <span class="keyword">requires</span>(<span class="keyword">const</span> T &amp;t) &#123;</span><br><span class="line">    <span class="keyword">typename</span> T::value_type;</span><br><span class="line">    &#123; t.ver &#125; -&gt; <span class="keyword">int</span>;</span><br><span class="line">    &#123; t.toString() &#125;-&gt;<span class="built_in">std</span>::same_as&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::<span class="built_in">string</span> <span class="title">toString</span><span class="params">(<span class="keyword">const</span> T&amp; input)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(has_toString&lt;T&gt;)</span></span></span><br><span class="line">        return input.toString();</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"unknown format"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>配合C++17的if constexpr，很漂亮的解決了上述的難題</p>
+<h3 id="Debug-Template-Code"><a href="#Debug-Template-Code" class="headerlink" title="Debug Template Code"></a>Debug Template Code</h3><p>在寫Generic template code的時候，往往要跟Error message打交道<br>有了Concept約束之後，比較容易觀測出到底哪裡錯了</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> have_value = <span class="keyword">requires</span>(T a) &#123;</span><br><span class="line">  a.value;</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">requires</span> have_value&lt;T&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">get_value</span><span class="params">(<span class="keyword">const</span> T&amp; a)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">auto</span> v = a.value;</span><br><span class="line">  <span class="comment">// do some thing</span></span><br><span class="line">  <span class="keyword">return</span> v;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> b = <span class="number">10</span>;</span><br><span class="line">  <span class="keyword">auto</span> y = get_value(b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>錯誤訊息如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="built_in">source</span>&gt;:2:1: error: <span class="string">'concept'</span> does not name a <span class="built_in">type</span></span><br><span class="line">    2 | concept have_value = requires(T a) &#123;</span><br><span class="line">      | ^~~~~~~</span><br><span class="line"></span><br><span class="line">&lt;<span class="built_in">source</span>&gt;:2:1: note: <span class="string">'concept'</span> only available with <span class="string">'-fconcepts'</span></span><br><span class="line">&lt;<span class="built_in">source</span>&gt;:7:1: error: <span class="string">'requires'</span> does not name a <span class="built_in">type</span></span><br><span class="line">    7 | requires have_value&lt;T&gt;</span><br><span class="line">      | ^~~~~~~~</span><br><span class="line"></span><br><span class="line">&lt;<span class="built_in">source</span>&gt;: In <span class="keyword">function</span> <span class="string">'int main()'</span>:</span><br><span class="line">&lt;<span class="built_in">source</span>&gt;:18:12: error: <span class="string">'get_value'</span> was not declared <span class="keyword">in</span> this scope</span><br><span class="line">   18 |   auto y = get_value(b);</span><br><span class="line">      |            ^~~~~~~~~</span><br><span class="line"></span><br><span class="line">Compiler returned: 1</span><br></pre></td></tr></table></figure>
+<p>很明顯的我們的Type不符合Concept的要求<br>這個範例簡單到就算用原先的方式，有經驗的Porgrammer一樣能夠找出錯誤<br>如果你的Code是一層一層的Template累加起來，就知道這東西多有用了</p>
+<h2 id="How-to-use-Concept"><a href="#How-to-use-Concept" class="headerlink" title="How to use Concept"></a>How to use Concept</h2><h3 id="Four-Ways"><a href="#Four-Ways" class="headerlink" title="Four Ways"></a>Four Ways</h3><h4 id="Requires-Clause"><a href="#Requires-Clause" class="headerlink" title="Requires Clause"></a>Requires Clause</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">requires</span> <span class="built_in">std</span>::integral&lt;T&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">log</span><span class="params">(T&amp;&amp; x)</span></span>;</span><br></pre></td></tr></table></figure>
+<h4 id="Trailing-Requires-Clause"><a href="#Trailing-Requires-Clause" class="headerlink" title="Trailing Requires Clause"></a>Trailing Requires Clause</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">log</span><span class="params">(T&amp;&amp; x)</span> <span class="keyword">requires</span> <span class="built_in">std</span>::integral&lt;T&gt;</span></span><br></pre></td></tr></table></figure>
+<p>雖然比起第一種方式顯得冗長，不過有種特異功能第一種方式做不到</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">log</span><span class="params">(T&amp;&amp; x)</span> <span class="keyword">requires</span> <span class="built_in">std</span>::integral&lt;<span class="title">decltype</span><span class="params">(x)</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>由於Trailing Requires Clause可以看到整個Function signature, 因此可以使用<code>decltype</code>做處理</p>
+<h4 id="Constrained-Template-Parameters"><a href="#Constrained-Template-Parameters" class="headerlink" title="Constrained Template Parameters"></a>Constrained Template Parameters</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::integral T&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">log</span><span class="params">(T&amp;&amp; x)</span></span></span><br></pre></td></tr></table></figure>
+<p>很顯然的， T這個類型必須滿足<code>std::integral</code>的約束<br>這方案還有一種好處，在不支援C++20的Compilier，只要把<code>std::integral</code>換成<code>typename</code><br>就能照常編譯了，不過享受不到Concept的好處<br>不過可以在C++20檢查過之後Poring回Pre-C++20的Compiler</p>
+<h4 id="Abbreviated-function-template"><a href="#Abbreviated-function-template" class="headerlink" title="Abbreviated function template"></a>Abbreviated function template</h4><p>顧名思義，這種方式只能在 Function template上用，是一種語法糖<br>看看以下這個案例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Arithmetic <span class="keyword">auto</span> <span class="title">sub</span><span class="params">(Arithmetic <span class="keyword">auto</span> fir, Arithmetic <span class="keyword">auto</span> sec)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> fir - sec;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>基本上等價於<code>Constrained Template Parameters</code>的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;Arithmetic T, Arithmetic T2&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">sub</span><span class="params">(T fir, T2 sec)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> fir - sec;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>比起上面的寫法，連template宣告都省下來了，不過上面阿寫法可以蛻化為Pre-C++20，這不行</p>
+<h2 id="Function-overload"><a href="#Function-overload" class="headerlink" title="Function overload"></a>Function overload</h2><p>Concept允許function overload，比起一般的template function, 通過concept檢驗的function會優先採用<br>例如</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">overload</span><span class="params">(<span class="keyword">auto</span> t)</span></span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"auto : "</span> &lt;&lt; t &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">requires</span> <span class="built_in">std</span>::is_integral_v&lt;T&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">overload</span><span class="params">(T t)</span></span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Integral : "</span> &lt;&lt; t &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">overload</span><span class="params">(<span class="keyword">long</span> t)</span></span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"long : "</span> &lt;&lt; t &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    overload(<span class="number">3.14</span>);             <span class="comment">// (1)</span></span><br><span class="line">    overload(<span class="number">2010</span>);             <span class="comment">// (2)</span></span><br><span class="line">    overload(<span class="number">2020l</span>);            <span class="comment">// (3)</span></span><br><span class="line">    </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Customize-Concept"><a href="#Customize-Concept" class="headerlink" title="Customize Concept"></a>Customize Concept</h2><h3 id="The-simplest-concept"><a href="#The-simplest-concept" class="headerlink" title="The simplest concept"></a>The simplest concept</h3><p>Concept就是Compile-time的boolean expression</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> superfluous = <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+<p>既然是個boolean expression，就能做所有boolean operator支援的操作</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> integral = <span class="built_in">std</span>::is_integral_v&lt;T&gt;;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> number = <span class="built_in">std</span>::integral&lt;T&gt; || <span class="built_in">std</span>::floating_point&lt;T&gt;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="More-complext-concept"><a href="#More-complext-concept" class="headerlink" title="More complext concept"></a>More complext concept</h3><p>定義一個能支援遞增的Concept</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> you_can_increment_it = <span class="keyword">requires</span>(T x)</span><br><span class="line">&#123;</span><br><span class="line">    &#123;++x&#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>定義能夠進行四則運算的Concept, 注意這邊需要兩個Type</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> X, <span class="keyword">typename</span> Y&gt;</span><br><span class="line"><span class="keyword">concept</span> they_are_mathsy = <span class="keyword">requires</span>(X x, Y y)</span><br><span class="line">&#123;</span><br><span class="line">    &#123; x * y &#125;;</span><br><span class="line">    &#123; x / y &#125;;</span><br><span class="line">    &#123; x + y &#125;;</span><br><span class="line">    &#123; x - y &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>對Return type有要求的Concept</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> you_can_increment_it = <span class="keyword">requires</span>(T x)</span><br><span class="line">&#123;</span><br><span class="line">    &#123;++x&#125; -&gt; <span class="built_in">std</span>::same_as&lt;T&gt;;</span><br><span class="line">    &#123;x + x&#125; -&gt; <span class="built_in">std</span>::convertible_to&lt;<span class="keyword">int</span>&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>檢查type是否有member structure和member function</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">concept</span> its_a_dragon = <span class="keyword">requires</span>(T x)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// this type trait must be able to be instantiated</span></span><br><span class="line">    <span class="keyword">typename</span> dragon_traits&lt;T&gt;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// T has a nested typename for some pointer idk use your imagination</span></span><br><span class="line">    <span class="keyword">typename</span> T::dragon_clan_ptr;</span><br><span class="line"></span><br><span class="line">    &#123;x.breathe_fire()&#125;;</span><br><span class="line">    &#123;x.dragon_breath_firepower()&#125; -&gt; <span class="built_in">std</span>::convertible_to&lt;uint&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="Concept-all-the-thing"><a href="#Concept-all-the-thing" class="headerlink" title="Concept all the thing"></a>Concept all the thing</h2><p>當然，你也可以在其他地方加上Concept</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Integral <span class="keyword">auto</span> integ = getIntegral(<span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+<p>你的return value自然就要符合Integral的約束，幫助我們在Code Maintenance和Refactoring中得到優勢</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>比起C++Module和C++Coroutine改變遊戲規則的重要性比起來，Conceptˋ只能算是錦上添花，不過對Library developer來說還是有用的</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://stackoverflow.com/questions/257288/is-it-possible-to-write-a-template-to-check-for-a-functions-existence" target="_blank" rel="noopener">Is it possible to write a template to check for a function’s existence?</a><br><a href="https://www.bfilipek.com/2016/02/notes-on-c-sfinae.html" target="_blank" rel="noopener">Notes on C++ SFINAE</a><br><a href="https://jguegant.github.io/blogs/tech/sfinae-introduction.html" target="_blank" rel="noopener">An introduction to C++’s SFINAE concept: compile-time introspection of a class member</a><br><a href="https://medium.com/@MKahsari/sfinae-step-by-step-67e6ef6154da" target="_blank" rel="noopener">Substitution Failure is Error and Not An Error.</a><br><a href="http://www.modernescpp.com/index.php/c-20-concepts-the-details" target="_blank" rel="noopener">C++20: Concepts, the Details</a><br><a href="https://omnigoat.github.io/2020/01/19/cpp20-concepts/" target="_blank" rel="noopener">C++20 Concepts</a><br><a href="http://www.modernescpp.com/index.php/c-20-concepts-defining-concepts" target="_blank" rel="noopener">C++20: Define Concepts</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/19/Build-a-modern-javascript-librarry-from-the-ground-up/" rel="prev" title="Build a modern javascript librarry from the ground up">
+      <i class="fa fa-chevron-left"></i> Build a modern javascript librarry from the ground up
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/21/Static-Polymorphism-in-C-Part-I/" rel="next" title="Static Polymorphism in C++ Part I">
+      Static Polymorphism in C++ Part I <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-Concepts"><span class="nav-number">1.</span> <span class="nav-text">Why Concepts?</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#實例分析"><span class="nav-number">1.1.</span> <span class="nav-text">實例分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Function-overload-by-type"><span class="nav-number">1.1.1.</span> <span class="nav-text">Function overload by type</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-98-Way"><span class="nav-number">1.1.2.</span> <span class="nav-text">C++98 Way</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-11-Way"><span class="nav-number">1.1.3.</span> <span class="nav-text">C++11 Way</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Boost-Hana-Solution"><span class="nav-number">1.1.4.</span> <span class="nav-text">Boost Hana Solution</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-17"><span class="nav-number">1.1.5.</span> <span class="nav-text">C++17</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Think-more"><span class="nav-number">1.1.6.</span> <span class="nav-text">Think more</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-20-Concept-Solution"><span class="nav-number">1.1.7.</span> <span class="nav-text">C++ 20 Concept Solution</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Debug-Template-Code"><span class="nav-number">1.2.</span> <span class="nav-text">Debug Template Code</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-to-use-Concept"><span class="nav-number">2.</span> <span class="nav-text">How to use Concept</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Four-Ways"><span class="nav-number">2.1.</span> <span class="nav-text">Four Ways</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Requires-Clause"><span class="nav-number">2.1.1.</span> <span class="nav-text">Requires Clause</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Trailing-Requires-Clause"><span class="nav-number">2.1.2.</span> <span class="nav-text">Trailing Requires Clause</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Constrained-Template-Parameters"><span class="nav-number">2.1.3.</span> <span class="nav-text">Constrained Template Parameters</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Abbreviated-function-template"><span class="nav-number">2.1.4.</span> <span class="nav-text">Abbreviated function template</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Function-overload"><span class="nav-number">3.</span> <span class="nav-text">Function overload</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Customize-Concept"><span class="nav-number">4.</span> <span class="nav-text">Customize Concept</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#The-simplest-concept"><span class="nav-number">4.1.</span> <span class="nav-text">The simplest concept</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#More-complext-concept"><span class="nav-number">4.2.</span> <span class="nav-text">More complext concept</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Concept-all-the-thing"><span class="nav-number">5.</span> <span class="nav-text">Concept all the thing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">6.</span> <span class="nav-text">Conclusion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">7.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">222</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Function template overload拿Boost.Serialization當範例 1234567namespace boost::serialization &amp;#123;        template &lt;class Archive&gt;        void serialize(Archive&amp; ar, two_things&amp; tt, unsigned">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Static Polymorphism in C++ Part 2">
+<meta property="og:url" content="http://yoursite.com/2020/09/11/Static-Polymorphism-in-C-Part-2Static-Polymorphism-in-C-Part-2/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="Function template overload拿Boost.Serialization當範例 1234567namespace boost::serialization &amp;#123;        template &lt;class Archive&gt;        void serialize(Archive&amp; ar, two_things&amp; tt, unsigned">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-09-11T09:52:31.000Z">
+<meta property="article:modified_time" content="2021-07-15T01:00:31.840Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2020/09/11/Static-Polymorphism-in-C-Part-2Static-Polymorphism-in-C-Part-2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Static Polymorphism in C++ Part 2 | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">第十三號艦隊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/09/11/Static-Polymorphism-in-C-Part-2Static-Polymorphism-in-C-Part-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Static Polymorphism in C++ Part 2
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-09-11 09:52:31" itemprop="dateCreated datePublished" datetime="2020-09-11T09:52:31+00:00">2020-09-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-07-15 01:00:31" itemprop="dateModified" datetime="2021-07-15T01:00:31+00:00">2021-07-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="Function-template-overload"><a href="#Function-template-overload" class="headerlink" title="Function template overload"></a>Function template overload</h4><p>拿Boost.Serialization當範例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> boost::serialization &#123;</span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">Archive</span>&gt;</span></span><br><span class="line"><span class="class">        <span class="title">void</span> <span class="title">serialize</span>(<span class="title">Archive</span>&amp; <span class="title">ar</span>, <span class="title">two_things</span>&amp; <span class="title">tt</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">version</span>) &#123;</span></span><br><span class="line">                ar &amp; tt.a;</span><br><span class="line">                ar &amp; tt.b;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Pros:</p>
+<ul>
+<li>就像膠水，將黏貼部分獨立成單一Unit，需要的時候再引入即可</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>跟前個方式依樣，需要打開library的namespace</li>
+<li>跟前一個方式依樣，存在Name Collisions的可能</li>
+</ul>
+<h4 id="Friend-member-function"><a href="#Friend-member-function" class="headerlink" title="Friend member function"></a>Friend member function</h4><p>又是Boost.Serialization</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;boost/serialization/serialization.hpp&gt;</span></span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">two_things</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        <span class="keyword">friend</span> <span class="class"><span class="keyword">class</span> <span class="title">boost</span>:</span>:serialization::access;</span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">Archive</span>&gt;</span></span><br><span class="line"><span class="class">        <span class="title">void</span> <span class="title">serialize</span>(<span class="title">Archive</span>&amp; <span class="title">ar</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">version</span>) &#123;</span></span><br><span class="line">                ar &amp; a;</span><br><span class="line">                ar &amp; b;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="keyword">int</span> a;</span><br><span class="line">        <span class="keyword">bool</span> b;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>優缺點正好跟上面相反</p>
+<p>Pros:</p>
+<ul>
+<li>不需要打開library的namespace</li>
+<li>不會造成Name Collisions</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Tightly coupled with structure</li>
+</ul>
+<p>當我們如果不需要serialization功能時，透過上面的方式，我們只需要不include implemtation unit即可，不過這方法就不行了<br>另外一點，這方式引入了boost::serialization的依賴，不管我們需不需要，都必須承受這副作用</p>
+<h5 id="ARGUMENT-DEPENDENT-LOOKUP"><a href="#ARGUMENT-DEPENDENT-LOOKUP" class="headerlink" title="ARGUMENT-DEPENDENT LOOKUP"></a>ARGUMENT-DEPENDENT LOOKUP</h5><p>C++最難理解的特性之一</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">two_things</span> &#123;</span></span><br><span class="line">                <span class="keyword">int</span> a;</span><br><span class="line">                <span class="keyword">bool</span> b;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">do_something</span><span class="params">(two_things &amp;t)</span> </span>&#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">"do_something in anonymous namespace\n"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        two_things t;</span><br><span class="line">        do_something(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="Worng-usage-example-of-ADL-std-swap"><a href="#Worng-usage-example-of-ADL-std-swap" class="headerlink" title="Worng usage example of ADL (std::swap)"></a>Worng usage example of ADL (std::swap)</h5><p>What’s wrong with swap<br>看看以下的程式馬</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> A &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">two_things</span> &#123;</span></span><br><span class="line">                <span class="keyword">int</span> a;</span><br><span class="line">                <span class="keyword">bool</span> b;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(two_things &amp;, two_things &amp;)</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">"swap in namespace A\n"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">namespace</span> B &#123;</span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(T&amp; a, T&amp;b)</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">                swap(a, b);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        A::two_things a, b;</span><br><span class="line">        <span class="keyword">int</span> c, d;</span><br><span class="line">        B::test(a, b);</span><br><span class="line">        B::test(c, d);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>swap(a, b) // invokes ADL because call name is unqualified</li>
+<li>std::swap(a, b) // does not invoke ADL because call name is qualified</li>
+</ul>
+<p>如果我們把<code>swap</code>改成<code>std::stap</code>，自訂億的swap就毫無作用了<br>正確的做法應該是</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> B &#123;</span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(T&amp; a, T&amp;b)</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">                <span class="keyword">using</span> <span class="built_in">std</span>::swap;</span><br><span class="line">                swap(a, b);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="Correct-usage-example-of-ADL-std-swap"><a href="#Correct-usage-example-of-ADL-std-swap" class="headerlink" title="Correct usage example of ADL (std::swap)"></a>Correct usage example of ADL (std::swap)</h5><ul>
+<li>Create a callable function object which does the two-step with an internal detail namespace’s swap.<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> nonstd &#123;</span><br><span class="line">        <span class="keyword">namespace</span> detail &#123;</span><br><span class="line">                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">                <span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(T&amp;, T&amp;)</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">"nonstd::swap\n"</span>); &#125;</span><br><span class="line">                <span class="class"><span class="keyword">struct</span> <span class="title">swap_func</span> &#123;</span></span><br><span class="line">                        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">                        <span class="function"><span class="keyword">void</span> <span class="title">operator</span><span class="params">()</span><span class="params">(T &amp;a, T&amp;b)</span> <span class="keyword">const</span> <span class="keyword">noexcept</span> </span>&#123;</span><br><span class="line">                                swap(a, b);</span><br><span class="line">                        &#125;</span><br><span class="line">                &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">auto</span> swap = detail::swap_func&#123;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> B &#123;</span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(T&amp; a, T&amp;b)</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">                nonstd::swap(a, b);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+這做法在Reference中的文章有特別說明，被稱作<code>Customization Point Object</code><br>亦或是<code>niebloid</code>(以作者的名稱命名的單字)</li>
+</ul>
+<h6 id="Friend-or-not"><a href="#Friend-or-not" class="headerlink" title="Friend or not?"></a>Friend or not?</h6><p>假設我們把 namespace A中的swap從free_function變成friend function</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">two_things</span> &#123;</span></span><br><span class="line">        <span class="keyword">int</span> a;</span><br><span class="line">        <span class="keyword">bool</span> b;</span><br><span class="line">        <span class="function"><span class="keyword">friend</span> <span class="keyword">void</span> <span class="title">swap</span><span class="params">(two_things &amp;, two_things &amp;)</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">"swap in namespace A\n"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>兩者是等價的，不過</p>
+<ul>
+<li>friend function 可以存取 structure的private field，free function不能</li>
+<li>friend function只能被ADL找到</li>
+</ul>
+<h5 id="Downgrade-to-C-11"><a href="#Downgrade-to-C-11" class="headerlink" title="Downgrade to C++11"></a>Downgrade to C++11</h5><p>inline variable是C++17才有的玩意 在有些時候用不了新標準的情況之下 有必要找個方法向下相容</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> nonstd &#123;</span><br><span class="line">        <span class="comment">// older standards:</span></span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> __<span class="title">static_const</span> &#123;</span> <span class="keyword">static</span> <span class="keyword">constexpr</span> T value&#123;&#125;; &#125;;</span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line">        <span class="keyword">constexpr</span> T __static_const&lt;T&gt;::value;</span><br><span class="line">        <span class="keyword">constexpr</span> <span class="keyword">const</span> <span class="keyword">auto</span>&amp; swap = __static_const&lt;detail::swap_func&gt;::value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h4><ul>
+<li><a href="http://ericniebler.com/2014/10/21/customization-point-design-in-c11-and-beyond/" target="_blank" rel="noopener">Customization Point Design in C++11 and Beyond</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/21/Static-Polymorphism-in-C-Part-I/" rel="prev" title="Static Polymorphism in C++ Part I">
+      <i class="fa fa-chevron-left"></i> Static Polymorphism in C++ Part I
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/26/C-Coroutine-1/" rel="next" title="C++ Coroutine  (1)">
+      C++ Coroutine  (1) <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Function-template-overload"><span class="nav-number">1.</span> <span class="nav-text">Function template overload</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Friend-member-function"><span class="nav-number">2.</span> <span class="nav-text">Friend member function</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#ARGUMENT-DEPENDENT-LOOKUP"><span class="nav-number">2.1.</span> <span class="nav-text">ARGUMENT-DEPENDENT LOOKUP</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Worng-usage-example-of-ADL-std-swap"><span class="nav-number">2.2.</span> <span class="nav-text">Worng usage example of ADL (std::swap)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Correct-usage-example-of-ADL-std-swap"><span class="nav-number">2.3.</span> <span class="nav-text">Correct usage example of ADL (std::swap)</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#Friend-or-not"><span class="nav-number">2.3.1.</span> <span class="nav-text">Friend or not?</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Downgrade-to-C-11"><span class="nav-number">2.4.</span> <span class="nav-text">Downgrade to C++11</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Reference"><span class="nav-number">3.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">222</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.1
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
