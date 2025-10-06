@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="為了很多因素（降低Playform depdent &#x2F; Optimization等。 GCC 跟 CLANG 都引進了一層中間層，這曾的目的是定義一個平台無關的指令集， 以老朋友hello來示範如何輸出中間產物。 123456#include &lt;stdio.h&gt;int main()&amp;#123;        printf(&quot;Hello world\n&quot;);        return">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Output intermediate format for GCC&#x2F;CLANG">
+<meta property="og:url" content="http://yoursite.com/2014/12/11/2014-12-11-output-intermediate-format-for-gcc-clang/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="為了很多因素（降低Playform depdent &#x2F; Optimization等。 GCC 跟 CLANG 都引進了一層中間層，這曾的目的是定義一個平台無關的指令集， 以老朋友hello來示範如何輸出中間產物。 123456#include &lt;stdio.h&gt;int main()&amp;#123;        printf(&quot;Hello world\n&quot;);        return">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2014-12-11T14:31:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.622Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2014/12/11/2014-12-11-output-intermediate-format-for-gcc-clang/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Output intermediate format for GCC/CLANG | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2014/12/11/2014-12-11-output-intermediate-format-for-gcc-clang/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Output intermediate format for GCC/CLANG
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2014-12-11 14:31:00" itemprop="dateCreated datePublished" datetime="2014-12-11T14:31:00+00:00">2014-12-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/GCC/" itemprop="url" rel="index"><span itemprop="name">GCC</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/GCC/Clang/" itemprop="url" rel="index"><span itemprop="name">Clang</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/GCC/Clang/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>為了很多因素（降低Playform depdent / Optimization等。 GCC 跟 CLANG 都引進了一層中間層，這曾的目的是定義一個平台無關的指令集， 以老朋友hello來示範如何輸出中間產物。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Hello world\n"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h2 id="GCC"><a href="#GCC" class="headerlink" title="GCC"></a>GCC</h2><p>GCC的中間語言叫做Register transfer language<br>利用下面的方式產生<code>hello.c.xxxr.expand</code>的檔案。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -S -fdump-rtl-expand hello.c</span><br></pre></td></tr></table></figure>
+<p>輸出結果類似這個樣子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">;; Function main (main, funcdef_no&#x3D;0, decl_uid&#x3D;2197, symbol_order&#x3D;0)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">;; Generating RTL for gimple basic block 2</span><br><span class="line"></span><br><span class="line">;; Generating RTL for gimple basic block 3</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">try_optimize_cfg iteration 1</span><br><span class="line"></span><br><span class="line">Merging block 3 into block 2...</span><br><span class="line">Merged blocks 2 and 3.</span><br><span class="line">Merged 2 and 3 without moving.</span><br><span class="line">Merging block 4 into block 2...</span><br><span class="line">Merged blocks 2 and 4.</span><br><span class="line">Merged 2 and 4 without moving.</span><br><span class="line">Removing jump 11.</span><br><span class="line">Merging block 5 into block 2...</span><br><span class="line">Merged blocks 2 and 5.</span><br><span class="line">Merged 2 and 5 without moving.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">try_optimize_cfg iteration 2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">;;</span><br><span class="line">;; Full RTL generated for this function:</span><br><span class="line">;;</span><br><span class="line">(note 1 0 3 NOTE_INSN_DELETED)</span><br><span class="line">(note 3 1 2 2 [bb 2] NOTE_INSN_BASIC_BLOCK)</span><br><span class="line">(note 2 3 5 2 NOTE_INSN_FUNCTION_BEG)</span><br><span class="line">(insn 5 2 6 2 (set (reg:DI 5 di)</span><br><span class="line">        (symbol_ref&#x2F;f:DI (&quot;*.LC0&quot;) [flags 0x2]  &lt;var_decl 0x7f532282d850 *.LC0&gt;)) hello.c:5 -1</span><br><span class="line">     (nil))</span><br><span class="line">(call_insn 6 5 7 2 (set (reg:SI 0 ax)</span><br><span class="line">        (call (mem:QI (symbol_ref:DI (&quot;puts&quot;) [flags 0x41]  &lt;function_decl 0x7f5322762800 __builtin_puts&gt;) [0 __builtin_puts S1 A8])</span><br><span class="line">            (const_int 0 [0]))) hello.c:5 -1</span><br><span class="line">     (nil)</span><br><span class="line">    (expr_list:DI (use (reg:DI 5 di))</span><br><span class="line">        (nil)))</span><br><span class="line">(insn 7 6 10 2 (set (reg:SI 83 [ D.2203 ])</span><br><span class="line">        (const_int 0 [0])) hello.c:6 -1</span><br><span class="line">     (nil))</span><br><span class="line">(insn 10 7 14 2 (set (reg:SI 84 [ &lt;retval&gt; ])</span><br><span class="line">        (reg:SI 83 [ D.2203 ])) hello.c:6 -1</span><br><span class="line">     (nil))</span><br><span class="line">(insn 14 10 15 2 (set (reg&#x2F;i:SI 0 ax)</span><br><span class="line">        (reg:SI 84 [ &lt;retval&gt; ])) hello.c:7 -1</span><br><span class="line">     (nil))</span><br><span class="line">(insn 15 14 0 2 (use (reg&#x2F;i:SI 0 ax)) hello.c:7 -1</span><br><span class="line">     (nil))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>如果對RTL有興趣的，可以參考</p>
+<ul>
+<li><a href="http://kitoslab.blogspot.tw/2012/06/gcc-rtl-insn.html" target="_blank" rel="noopener">GCC RTL INSN 簡介 </a></li>
+<li><a href="http://www.ibm.com/developerworks/cn/linux/l-gccrtl/" target="_blank" rel="noopener">GCC 的编译流程及中间表示层 RTL 的初步探索</a></li>
+<li><a href="http://www.slideshare.net/PriyathamBollimpalli/gcc-rtl-and-machine" target="_blank" rel="noopener">GCC RTL and Machine Description</a></li>
+<li><a href="http://www.cse.iitb.ac.in/~uday/courses/cs715-09/gcc-rtl.pdf" target="_blank" rel="noopener">Introduction to RTL (pdf)</a></li>
+<li>[]Extending GCC with new operations: RTL, SIMD and treecodes (pdf](<a href="http://www.hipeac.net/system/files/3_Back_End.pdf" target="_blank" rel="noopener">http://www.hipeac.net/system/files/3_Back_End.pdf</a>)</li>
+<li><a href="http://140.134.131.145/upload/paper_uni/931pdf/931036.pdf" target="_blank" rel="noopener">追蹤GCC核心原始碼 與移植相關之研究 (pdf)</a></li>
+<li><a href="http://www.cri.ensmp.fr/people/pop/papers/2002-07-gcc-slides-en.pdf" target="_blank" rel="noopener">Code optimization in GCC (pdf)</a></li>
+</ul>
+<h2 id="Clang"><a href="#Clang" class="headerlink" title="Clang"></a>Clang</h2><p>相較於GCC，Clang的中間語言叫做Bitcode<br>利用下面的方式產生<code>hello.ll</code>的檔案。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ clang -S -emit-llvm hello.c</span><br></pre></td></tr></table></figure>
+<p>內容大概長這個樣子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">; ModuleID &#x3D; &#39;hello.c&#39;</span><br><span class="line">target datalayout &#x3D; &quot;e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128&quot;</span><br><span class="line">target triple &#x3D; &quot;x86_64-pc-linux-gnu&quot;</span><br><span class="line"></span><br><span class="line">@.str &#x3D; private unnamed_addr constant [13 x i8] c&quot;Hello world\0A\00&quot;, align 1</span><br><span class="line"></span><br><span class="line">; Function Attrs: nounwind uwtable</span><br><span class="line">define i32 @main() #0 &#123;</span><br><span class="line">  %1 &#x3D; alloca i32, align 4</span><br><span class="line">  store i32 0, i32* %1</span><br><span class="line">  %2 &#x3D; call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([13 x i8]* @.str, i32 0, i32 0))</span><br><span class="line">  ret i32 0</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">declare i32 @printf(i8*, ...) #1</span><br><span class="line"></span><br><span class="line">attributes #0 &#x3D; &#123; nounwind uwtable &quot;less-precise-fpmad&quot;&#x3D;&quot;false&quot; &quot;no-frame-pointer-elim&quot;&#x3D;&quot;true&quot; &quot;no-frame-pointer-elim-non-leaf&quot; &quot;no-infs-fp-math&quot;&#x3D;&quot;false&quot; &quot;no-nans-fp-math&quot;&#x3D;&quot;false&quot; &quot;stack-protector-buffer-size&quot;&#x3D;&quot;8&quot; &quot;unsafe-fp-math&quot;&#x3D;&quot;false&quot; &quot;use-soft-float&quot;&#x3D;&quot;false&quot; &#125;</span><br><span class="line">attributes #1 &#x3D; &#123; &quot;less-precise-fpmad&quot;&#x3D;&quot;false&quot; &quot;no-frame-pointer-elim&quot;&#x3D;&quot;true&quot; &quot;no-frame-pointer-elim-non-leaf&quot; &quot;no-infs-fp-math&quot;&#x3D;&quot;false&quot; &quot;no-nans-fp-math&quot;&#x3D;&quot;false&quot; &quot;stack-protector-buffer-size&quot;&#x3D;&quot;8&quot; &quot;unsafe-fp-math&quot;&#x3D;&quot;false&quot; &quot;use-soft-float&quot;&#x3D;&quot;false&quot; &#125;</span><br><span class="line"></span><br><span class="line">!llvm.ident &#x3D; !&#123;!0&#125;</span><br><span class="line"></span><br><span class="line">!0 &#x3D; metadata !&#123;metadata !&quot;Ubuntu clang version 3.4-1ubuntu3 (tags&#x2F;RELEASE_34&#x2F;final) (based on LLVM 3.4)&quot;&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>同樣列出參考資料</p>
+<ul>
+<li><a href="http://pllab.cs.nthu.edu.tw/cs340402/lectures/lectures_2013/LLVM%20Bitcode%20Introduction.pdf" target="_blank" rel="noopener">LLVM &amp; LLVM Bitcode Introduction (pdf)</a></li>
+<li><a href="http://www.cs.sfu.ca/~wsumner/teaching/LLVMIntro.pdf" target="_blank" rel="noopener">A Brief Introduction to Using LLVM (pdf)</a></li>
+<li><a href="http://blog.linux.org.tw/~jserv/archives/2011/04/_llvm_brainfuck.html" target="_blank" rel="noopener">透過 LLVM 打造 Brainfuck JIT compiler</a></li>
+<li><a href="http://www.cs.umd.edu/~awruef/LLVM_Tutorial.pdf" target="_blank" rel="noopener">Using LLVM For ProgramTransformation (pdf)</a></li>
+<li><a href="http://loda.hala01.com/2012/05/llvm-low-level-virtual-machine-%E7%AD%86%E8%A8%98/" target="_blank" rel="noopener">LLVM (Low Level Virtual Machine) 筆記</a></li>
+<li><a href="http://hitcon.org/2012/download/0720B5_loda.chou_Introduce%20LLVM%20from%20a%20hacker%27s.view.pdf" target="_blank" rel="noopener">Introduce LLVM froma hacker’s view (pdf)</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2014/12/10/2014-12-10-some-misleading-concept-in-c-c/" rel="prev" title="Some misleading concept in C/C++">
+      <i class="fa fa-chevron-left"></i> Some misleading concept in C/C++
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2014/12/28/2014-12-28-online-learning-resource/" rel="next" title="Online learning Resource">
+      Online learning Resource <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#GCC"><span class="nav-number">1.</span> <span class="nav-text">GCC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Clang"><span class="nav-number">2.</span> <span class="nav-text">Clang</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

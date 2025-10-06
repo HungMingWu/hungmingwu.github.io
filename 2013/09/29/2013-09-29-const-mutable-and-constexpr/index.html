@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="從C語言說起在C語言的時候，const的用途很簡單，用來修飾變數的屬性。以下給個範例 123456void func(const int *v)&amp;#123;        int p;        *v &#x3D; 10;        v &#x3D; &amp;p;&amp;#125; 上面的*v &#x3D; 10會被編譯器指出v是不能被修改的。 值得注意的是 const int *的寫法跟 int co">
+<meta property="og:type" content="article">
+<meta property="og:title" content="const, mutable and constexpr">
+<meta property="og:url" content="http://yoursite.com/2013/09/29/2013-09-29-const-mutable-and-constexpr/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="從C語言說起在C語言的時候，const的用途很簡單，用來修飾變數的屬性。以下給個範例 123456void func(const int *v)&amp;#123;        int p;        *v &#x3D; 10;        v &#x3D; &amp;p;&amp;#125; 上面的*v &#x3D; 10會被編譯器指出v是不能被修改的。 值得注意的是 const int *的寫法跟 int co">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2013-09-29T01:43:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.618Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2013/09/29/2013-09-29-const-mutable-and-constexpr/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>const, mutable and constexpr | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2013/09/29/2013-09-29-const-mutable-and-constexpr/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          const, mutable and constexpr
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2013-09-29 01:43:00" itemprop="dateCreated datePublished" datetime="2013-09-29T01:43:00+00:00">2013-09-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/c/" itemprop="url" rel="index"><span itemprop="name">c++</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/c/C-11/" itemprop="url" rel="index"><span itemprop="name">C++11</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="從C語言說起"><a href="#從C語言說起" class="headerlink" title="從C語言說起"></a>從C語言說起</h2><p>在C語言的時候，const的用途很簡單，用來修飾變數的屬性。以下給個範例</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">void func(const int *v)</span><br><span class="line">&#123;</span><br><span class="line">        int p;</span><br><span class="line">        *v &#x3D; 10;</span><br><span class="line">        v &#x3D; &amp;p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的<code>*v = 10</code>會被編譯器指出v是不能被修改的。 值得注意的是 <code>const int *</code>的寫法跟 <code>int const *</code>是一樣的，不過我比較偏好前者。</p>
+<p>如果改寫成</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">void func(int * const v)</span><br><span class="line">&#123;</span><br><span class="line">        int p;</span><br><span class="line">        *v &#x3D; 10;</span><br><span class="line">        v &#x3D; &amp;p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>會告訴你<code>v = &amp;p</code>這行錯了，由此可見<code>int const *</code>表示被指向的 <strong>內容</strong> 不可改，而指標是可以改變的，這邊的const是用來修飾<code>int</code>的。而<code>int * const</code>表示指向的 <strong>指標</strong> 不可改，而這邊的const是用來修飾<code>int *</code>的。<br>當然，如果要兩者間得，也可以寫成這樣</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">void func(const int * const v)</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="C-98"><a href="#C-98" class="headerlink" title="C++98"></a>C++98</h2><p>C++擴大const的使用範圍，允許const修飾Class的Member Function。表示這個函數是 <strong>Logic Constness</strong>，不影響外界看這物件的狀態。因此以下這段程式碼會出現問題。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">class Test &#123;</span><br><span class="line">        int state;</span><br><span class="line">public:</span><br><span class="line">        void Func() const &#123;</span><br><span class="line">                state &#x3D; 1;</span><br><span class="line">        &#125; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>由於C++支援<a href="http://www.learncpp.com/cpp-tutorial/910-overloading-typecasts/" target="_blank" rel="noopener">Cast Overloading</a>，支援Function Signature相同，但const屬性不同的Overload，因此這樣的是合法的，，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">class Test &#123;</span><br><span class="line">        int state;</span><br><span class="line">public:</span><br><span class="line">        void NonConstFunc() &#123;&#125;</span><br><span class="line">        void Func() &#123;</span><br><span class="line">                state &#x3D; 0;</span><br><span class="line">        &#125;</span><br><span class="line">        void Func() const &#123;</span><br><span class="line">        &#125; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>寫個程式來測試一下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">oid Test1(const Test &amp;t)</span><br><span class="line">&#123;   </span><br><span class="line">        t.NonConstFunc();  &#x2F;&#x2F; Compile Error, 不能呼叫Non-const的Member Function</span><br><span class="line">        t.Func(); </span><br><span class="line">&#125;   </span><br><span class="line">void Test2(Test &amp;t)</span><br><span class="line">&#123; </span><br><span class="line">        t.NonConstFunc();</span><br><span class="line">        t.Func();</span><br><span class="line">&#125;</span><br><span class="line">void Test3(Test &amp;&amp;t)</span><br><span class="line">&#123;</span><br><span class="line">        t.NonConstFunc();</span><br><span class="line">        t.Func();</span><br><span class="line">&#125;</span><br><span class="line">Test t;</span><br><span class="line">Test1(t);</span><br><span class="line">Test2(t);</span><br><span class="line">Test3(move(t));</span><br></pre></td></tr></table></figure>
+<p>除了<code>Test1</code>的Func是跑const版本之外，其他所有函數都是呼叫Non-const版本的Func<br>雖說const的Member function是不可修改 <strong>Logic Constness</strong> ，不過以下程式碼很難是合法的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">class Test &#123;</span><br><span class="line">        int *state;</span><br><span class="line">public:</span><br><span class="line">        void NonConstFunc() &#123;&#125;</span><br><span class="line">        void Func() const &#123;</span><br><span class="line">            *state &#x3D; 1;</span><br><span class="line">        &#125; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="Mutable"><a href="#Mutable" class="headerlink" title="Mutable"></a>Mutable</h2><p>之前說過，從外界看到的類別狀態是 <strong>Logic Constness</strong> 的，這代表我們可以在 const函數裡面動手腳，只要外界看起來正常就好，因此就有了mutable的誕生。將上面的範例重新改寫。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">class Test &#123;</span><br><span class="line">        mutable int state;</span><br><span class="line">public:</span><br><span class="line">        void Func() const &#123;</span><br><span class="line">                state &#x3D; 1;</span><br><span class="line">        &#125; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>這樣就能正常使用了…初看之下好像很沒用，不過以這個範例來說</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">class Test &#123;</span><br><span class="line">        int state;</span><br><span class="line">        mutable mutex obj_mutex;</span><br><span class="line">public:</span><br><span class="line">        void SetState() &#123;</span><br><span class="line">                unique_lock&lt;mutex&gt; lock(obj_mutex);</span><br><span class="line">                state &#x3D; 1;</span><br><span class="line">        &#125;</span><br><span class="line">        int GetState() const &#123;</span><br><span class="line">                unique_lock&lt;mutex&gt; lock(obj_mutex);</span><br><span class="line">                return state;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>在Multithread的情況之下，有人會呼叫SetState，而有人會想知道GetState的值，雖然state在GetState不會被改變，但是mutex會變。所以需要mutable的存在。<br>另外一種情形是當做Cache使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">class HashTable &#123;</span><br><span class="line">        mutable string lastKey, lastValue;</span><br><span class="line">        ....</span><br><span class="line">public:</span><br><span class="line">        string lookup(string key) const &#123;</span><br><span class="line">                if (key &#x3D;&#x3D; lastKey) return lastValue;</span><br><span class="line">                string value &#x3D; ookupInternal(key);</span><br><span class="line">                lastKey &#x3D; key;</span><br><span class="line">                lastValue &#x3D; value;</span><br><span class="line">                return value;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>不過在C++11之後，又有新用法了 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int x &#x3D; 30;</span><br><span class="line">auto f1 &#x3D; [&#x3D;]() &#123; x &#x3D; 123; &#125; &#x2F;&#x2F; Compile error</span><br><span class="line">auto f1 &#x3D; [&#x3D;]() mutable &#123; x &#x3D; 123; &#125;</span><br><span class="line">auto f2 &#x3D; [&amp;]() mutable &#123; x &#x3D; 123; &#125;</span><br></pre></td></tr></table></figure>
+<p><code>f1</code>在呼叫之後，x會變成123，不過離開f1之後，x又回到30，而<code>f2</code>呼叫之後就整個變成123了。<br>不過我看不懂第一個範例的用途是什麼。</p>
+<h2 id="constexpr"><a href="#constexpr" class="headerlink" title="constexpr"></a>constexpr</h2><p>constexpr是C++11才有的觀念，原先就有<a href="http://msdn.microsoft.com/en-us/library/3ffb821x.aspx" target="_blank" rel="noopener">Constant Expressions</a>的觀念，不過還是有其不足之處。<br>假設我們要宣告個n*m的一維陣列，我們會這麼做。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">const int n &#x3D; 5;</span><br><span class="line">const int m &#x3D; 5;</span><br><span class="line">int array[n * m];</span><br></pre></td></tr></table></figure>
+<p>假設我們已經有一個<code>mul2</code>的函數，試著編譯以下這段程式就會出現錯誤。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">const int n &#x3D; 5;</span><br><span class="line">const int m &#x3D; 5;</span><br><span class="line">int mul2(int x, int y) &#123; return x * y; &#125;</span><br><span class="line">int array[n * m];</span><br></pre></td></tr></table></figure>
+<p>結果我們只能藉由以下兩種方法解決，一是回到C語言的Preprocessor來做。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define mul2(x, y) ((x) * (y))</span><br></pre></td></tr></table></figure>
+<p>這方式可行，不過缺乏型態資料。在Secure Coding的時候容易出錯。<br>另一種是在Runtime時算出一個常數。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int mul2(int x, int y) &#123; return x * y; &#125;</span><br><span class="line">const int Mul2 &#x3D; mul2(n, m);</span><br><span class="line">void func() &#123;</span><br><span class="line">        int array[Mul2];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果要把array儀到global scope，問題又出現了。導致不得不使用Preprocessor的解法。因此就有了<code>constexpr</code>的誕生。<br>有了constexpr之後，可以在編譯時期就算出答案，類似<a href="http://en.wikipedia.org/wiki/Template_metaprogramming" target="_blank" rel="noopener">Template Metaprogramming</a>，不過用途更廣。<br>上面的範例我們可以重新改寫</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">using namespace std;</span><br><span class="line">const int n &#x3D; 5;</span><br><span class="line">const int m &#x3D; 5;</span><br><span class="line">constexpr int mul2(int x, int y) &#123; return x * y; &#125;</span><br><span class="line">int array[mul2(n, m)];</span><br><span class="line">int main() &#123;</span><br><span class="line">        int x, y;</span><br><span class="line">        scanf(&quot;%d %d&quot;, &amp;x, &amp;y);</span><br><span class="line">        printf(&quot;arraySize &#x3D; %lu\n&quot;, sizeof(array) &#x2F; sizeof(array[0]));</span><br><span class="line">        printf(&quot;mul2((x, y) &#x3D; %d\n&quot;, mul2(x, y));</span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到這邊的mul2不只可以用在compile-time，在runtime也可正常執行。<br>也可以在編譯時期使用物件，上面的範例我們可以用<code>Functor</code>在寫一次。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">const int n &#x3D; 5;</span><br><span class="line">const int m &#x3D; 5;</span><br><span class="line">class Mul2 &#123;</span><br><span class="line">        int x, y;</span><br><span class="line">public:</span><br><span class="line">        constexpr Mul2(int x_, int y_) : x(x_), y(y_) &#123;&#125;</span><br><span class="line">        constexpr int operator()() &#123; return x * y; &#125;    </span><br><span class="line">&#125;;</span><br><span class="line">constexpr Mul2 mul2(n, m);</span><br><span class="line">int array[mul2()];</span><br></pre></td></tr></table></figure>
+<p>如果對constexpr有更多了解，可以參考<a href="http://www.cprogramming.com/c++11/c++11-compile-time-processing-with-constexpr.html" target="_blank" rel="noopener">Constexpr - Generalized Constant Expressions in C++11</a>，目前支援constexpr的編譯器也不多。</p>
+<h2 id="結論"><a href="#結論" class="headerlink" title="結論"></a>結論</h2><p>C++果然不愧是最難學的語言，每個環節都搞的特別複雜。我難過。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2013/09/27/2013-09-27-fasd-command-line-productivity-booster/" rel="prev" title="fasd: Command-line productivity booster">
+      <i class="fa fa-chevron-left"></i> fasd: Command-line productivity booster
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2013/10/01/2013-10-01-programming-fonts/" rel="next" title="Programming Fonts">
+      Programming Fonts <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#從C語言說起"><span class="nav-number">1.</span> <span class="nav-text">從C語言說起</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#C-98"><span class="nav-number">2.</span> <span class="nav-text">C++98</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mutable"><span class="nav-number">3.</span> <span class="nav-text">Mutable</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#constexpr"><span class="nav-number">4.</span> <span class="nav-text">constexpr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#結論"><span class="nav-number">5.</span> <span class="nav-text">結論</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

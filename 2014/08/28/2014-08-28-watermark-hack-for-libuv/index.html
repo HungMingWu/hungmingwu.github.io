@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="最近碰到一個困難的問題，好不容易找到解答，因此紀錄起來。當一個Socket讀寫速度不對稱的時候，該怎麼處理。假設Socket讀取的資料室100M&#x2F;S，而寫入的速度是10M&#x2F;S。如果是Blocking I&#x2F;O，OS會自動幫你處理這種狀況，難怪上網找範例程式碼都沒特別處理。由於libuv&#x2F;libevent等都是Non-blocking I&#x2F;O framework，，因此無法得到有用的資訊。翻到Linu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Watermark hack for libuv">
+<meta property="og:url" content="http://yoursite.com/2014/08/28/2014-08-28-watermark-hack-for-libuv/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="最近碰到一個困難的問題，好不容易找到解答，因此紀錄起來。當一個Socket讀寫速度不對稱的時候，該怎麼處理。假設Socket讀取的資料室100M&#x2F;S，而寫入的速度是10M&#x2F;S。如果是Blocking I&#x2F;O，OS會自動幫你處理這種狀況，難怪上網找範例程式碼都沒特別處理。由於libuv&#x2F;libevent等都是Non-blocking I&#x2F;O framework，，因此無法得到有用的資訊。翻到Linu">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2014-08-28T13:53:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.622Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2014/08/28/2014-08-28-watermark-hack-for-libuv/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Watermark hack for libuv | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2014/08/28/2014-08-28-watermark-hack-for-libuv/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Watermark hack for libuv
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2014-08-28 13:53:00" itemprop="dateCreated datePublished" datetime="2014-08-28T13:53:00+00:00">2014-08-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近碰到一個困難的問題，好不容易找到解答，因此紀錄起來。<br>當一個Socket讀寫速度不對稱的時候，該怎麼處理。<br>假設Socket讀取的資料室100M/S，而寫入的速度是10M/S。<br>如果是<strong>Blocking I/O</strong>，OS會自動幫你處理這種狀況，難怪上網找範例程式碼都沒特別處理。<br>由於libuv/libevent等都是<strong>Non-blocking I/O framework</strong>，，因此無法得到有用的資訊。<br>翻到<a href="https://tw.mall.yahoo.com/item/p031354674574" target="_blank" rel="noopener">Linux多線程服務端編程：使用muduo C＋＋網絡庫</a>裡面有個地方觸動了我的靈感。利用Watermark來管理讀寫動作。<br>後來找到<a href="http://www.wangafu.net/~nickm/libevent-book/Ref6_bufferevent.html" target="_blank" rel="noopener">Libevent的Bufferevents</a>和<a href="https://docs.python.org/3/library/asyncio-protocol.html#" target="_blank" rel="noopener">Python asys IO</a>都有類似Watermark的觀念，我想這應該是可行解。</p>
+<p>以讀取比寫入快為例</p>
+<ul>
+<li>當寫入的資料量大於Hih water mark時，暫停讀取動作</li>
+<li>當剩餘的寫入資料量小於Low water mark時，重新開始讀取<br>反之亦然。<a id="more"></a>
+
+</li>
+</ul>
+<p>至於要怎麼改，以下是我的解法</p>
+<ol>
+<li><p>先增加兩個Callback function type</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">typedef void(*uv_write_hw_cb)(uv_stream_t* stream);</span><br><span class="line">typedef void(*uv_write_lw_cb)(uv_stream_t* stream);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改Marco <code>UV_STREAM_FIELDS</code>新增四個欄位</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#define UV_STREAM_FIELDS                                                      \</span><br><span class="line">  &#x2F;* number of bytes queued for writing *&#x2F;                                    \</span><br><span class="line">  size_t write_queue_size;                                                    \</span><br><span class="line">  size_t write_highwater;                                                     \</span><br><span class="line">  size_t write_lowwater;                                                      \</span><br><span class="line">  uv_write_hw_cb water_highcb;                                                \</span><br><span class="line">  uv_write_lw_cb water_lowcb;                                                 \</span><br><span class="line">  uv_alloc_cb alloc_cb;                                                       \</span><br><span class="line">  uv_read_cb read_cb;                                                         \</span><br><span class="line">  &#x2F;* private *&#x2F;                                                               \</span><br><span class="line">  UV_STREAM_PRIVATE_FIELDS</span><br></pre></td></tr></table></figure>
+<p>紀錄高水位跟滴水位的資訊和Callback function。</p>
+</li>
+<li><p>修改 uv_stream_init，，將新增的欄位初始化</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">INLINE static void uv_stream_init(uv_loop_t* loop,</span><br><span class="line">                                  uv_stream_t* handle,</span><br><span class="line">                                  uv_handle_type type) &#123;</span><br><span class="line">  uv__handle_init(loop, (uv_handle_t*) handle, type);</span><br><span class="line">  handle-&gt;write_queue_size &#x3D; 0;</span><br><span class="line">  handle-&gt;activecnt &#x3D; 0;</span><br><span class="line">  handle-&gt;write_highwater &#x3D; 0;</span><br><span class="line">  handle-&gt;write_lowwater &#x3D; 0;</span><br><span class="line">  handle-&gt;water_highcb &#x3D; NULL;</span><br><span class="line">  handle-&gt;water_lowcb &#x3D; NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>新增一組API，讓外界可以控制高低水位和控制函數。 (略)</p>
+</li>
+<li><p>修改紀錄寫入的點，當資料量超過某個臨界點的時候執行相對硬的動作。例如TCP</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">int uv_tcp_write(uv_loop_t* loop,</span><br><span class="line">                 uv_write_t* req,</span><br><span class="line">                 uv_tcp_t* handle,</span><br><span class="line">                 const uv_buf_t bufs[],</span><br><span class="line">                 unsigned int nbufs,</span><br><span class="line">                 uv_write_cb cb) &#123;</span><br><span class="line">   &#x2F;&#x2F; 略</span><br><span class="line">   handle-&gt;write_queue_size +&#x3D; req-&gt;queued_bytes;</span><br><span class="line">   &#x2F;&#x2F; 這邊是我們新增的部份</span><br><span class="line">	 if (handle-&gt;water_highcb &amp;&amp; handle-&gt;write_highwater &lt;&#x3D; handle-&gt;write_queue_size)</span><br><span class="line">		handle-&gt;water_highcb(handle);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>還有</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">void uv_process_tcp_write_req(uv_loop_t* loop, uv_tcp_t* handle,</span><br><span class="line">    uv_write_t* req) &#123;</span><br><span class="line">    &#x2F;&#x2F; 略</span><br><span class="line">   handle-&gt;write_queue_size -&#x3D; req-&gt;queued_bytes;</span><br><span class="line">   &#x2F;&#x2F; 以下是新增的點</span><br><span class="line">   if (handle-&gt;water_lowcb &amp;&amp; handle-&gt;write_lowwater &gt;&#x3D; handle-&gt;write_queue_size)</span><br><span class="line">	   handle-&gt;water_lowcb(handle);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>雖然不確定這部是最佳解，不過目前看起來是可行解。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2014/08/12/2014-08-12-aspect-oriented-programming-in-c-11/" rel="prev" title="Aspect oriented programming in C++11">
+      <i class="fa fa-chevron-left"></i> Aspect oriented programming in C++11
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2014/09/11/2014-09-11-how-to-clear-a-buffer-in-c-c/" rel="next" title="How to clear a buffer in C/C++">
+      How to clear a buffer in C/C++ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

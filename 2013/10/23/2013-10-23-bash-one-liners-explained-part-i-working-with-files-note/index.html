@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在網路上看到這篇，做一下自己的筆記 替代，新增指定內容的字串到文件1$ echo &quot;Line 1&quot; &gt; file  新增字串到檔案最尾端1$ echo &quot;Line 2&quot; &gt;&gt; file  清空檔案內容將檔案內容全部清空，檔案大小歸零，以下兩種作法效果是一樣的。不過第二種比較容易看懂。 12$ &gt; file$ cat &#x2F;dev">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bash One-Liners Explained, Part I: Working with files Note">
+<meta property="og:url" content="http://yoursite.com/2013/10/23/2013-10-23-bash-one-liners-explained-part-i-working-with-files-note/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="在網路上看到這篇，做一下自己的筆記 替代，新增指定內容的字串到文件1$ echo &quot;Line 1&quot; &gt; file  新增字串到檔案最尾端1$ echo &quot;Line 2&quot; &gt;&gt; file  清空檔案內容將檔案內容全部清空，檔案大小歸零，以下兩種作法效果是一樣的。不過第二種比較容易看懂。 12$ &gt; file$ cat &#x2F;dev">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2013-10-23T14:48:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.619Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2013/10/23/2013-10-23-bash-one-liners-explained-part-i-working-with-files-note/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Bash One-Liners Explained, Part I: Working with files Note | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2013/10/23/2013-10-23-bash-one-liners-explained-part-i-working-with-files-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Bash One-Liners Explained, Part I: Working with files Note
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2013-10-23 14:48:00" itemprop="dateCreated datePublished" datetime="2013-10-23T14:48:00+00:00">2013-10-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/bash/" itemprop="url" rel="index"><span itemprop="name">bash</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在網路上看到<a href="http://www.catonmat.net/blog/bash-one-liners-explained-part-one/" target="_blank" rel="noopener">這篇</a>，做一下自己的筆記</p>
+<h2 id="替代，新增指定內容的字串到文件"><a href="#替代，新增指定內容的字串到文件" class="headerlink" title="替代，新增指定內容的字串到文件"></a>替代，新增指定內容的字串到文件</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ echo &quot;Line 1&quot; &gt; file</span><br></pre></td></tr></table></figure>
+
+<h2 id="新增字串到檔案最尾端"><a href="#新增字串到檔案最尾端" class="headerlink" title="新增字串到檔案最尾端"></a>新增字串到檔案最尾端</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ echo &quot;Line 2&quot; &gt;&gt; file</span><br></pre></td></tr></table></figure>
+
+<h2 id="清空檔案內容"><a href="#清空檔案內容" class="headerlink" title="清空檔案內容"></a>清空檔案內容</h2><p>將檔案內容全部清空，檔案大小歸零，以下兩種作法效果是一樣的。不過第二種比較容易看懂。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ &gt; file</span><br><span class="line">$ cat &#x2F;dev&#x2F;null &gt; file</span><br></pre></td></tr></table></figure>
+
+<h2 id="讀取一行資料"><a href="#讀取一行資料" class="headerlink" title="讀取一行資料"></a>讀取一行資料</h2><p>可以用以下方式讀取出來</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ read -r line &lt; file</span><br></pre></td></tr></table></figure>
+<p>這個方式會將頭尾的空白去掉，且保留字串中的反斜線(-r)。<br>如果要設定IFS的話，可以順便切割赤串。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ cat &quot;1, 2, 3&quot; &gt; file</span><br><span class="line">$ IFS&#x3D;&#39;, &#39; read -r first second third &lt; file</span><br></pre></td></tr></table></figure>
+<p>Read前面的<a href="http://www.cyberciti.biz/tips/handling-filenames-with-spaces-in-bash.html" target="_blank" rel="noopener">IFS</a>只影響當前的read指令，執行完之後恢復原狀。<br>原作中所說的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ echo &quot;              Emptry                        End&quot; &gt; file</span><br><span class="line">$ IFS&#x3D; read -r line &lt; file</span><br><span class="line">$ echo $&#123;line&#125;</span><br><span class="line">Emptry End</span><br></pre></td></tr></table></figure>
+<p>保留空白一點效果都沒有，只好寫成這個樣子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ SAVEIFS&#x3D;$IFS</span><br><span class="line">$ IFS&#x3D;</span><br><span class="line">$ read -r line &lt; ttt</span><br><span class="line">$ echo $&#123;line&#125;</span><br><span class="line">              Emptry                        End</span><br><span class="line">$ IFS&#x3D;$SAVEIFS</span><br></pre></td></tr></table></figure>
+<p>另外也可以用這種寫法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ line&#x3D;$&#123;head -1 file&#125;</span><br><span class="line">$ line&#x3D;&#96;head -1 file&#96;</span><br></pre></td></tr></table></figure>
+<p>也可以這樣寫</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ IFS&#x3D; line&#x3D;$&#123;head -1 file&#125;</span><br><span class="line">$ IFS&#x3D; line&#x3D;&#96;head -1 file&#96;</span><br></pre></td></tr></table></figure>
+<p>這邊的IFS就正常了，應該是Bash的Bug吧@@。</p>
+<h2 id="讀取文件的每一行"><a href="#讀取文件的每一行" class="headerlink" title="讀取文件的每一行"></a>讀取文件的每一行</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ while IFS&#x3D; read -r line; do</span><br><span class="line">		# do something with $&#123;line&#125;&#125;</span><br><span class="line">  done &lt; file</span><br></pre></td></tr></table></figure>
+<p>另一種寫法，利用pipe來做</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ cat file | while IFS&#x3D; read -r line; do</span><br><span class="line">    # do something with $&#123;line&#125;&#125;</span><br><span class="line">  done</span><br></pre></td></tr></table></figure>
+
+<h2 id="隨機讀取檔案的任合一行"><a href="#隨機讀取檔案的任合一行" class="headerlink" title="隨機讀取檔案的任合一行"></a>隨機讀取檔案的任合一行</h2><p>同樣的，達成這樣功能也是有很多作法，例如使用<a href="http://tldp.org/LDP/abs/html/process-sub.html" target="_blank" rel="noopener">Process substitution</a>建立一個匿名pipi。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ read -r random_line &lt; &lt;(shuf file)</span><br><span class="line">$ read -r random_line &lt; &lt;(sort -R file)</span><br></pre></td></tr></table></figure>
+<p>上面的shuf是用來此亂檔案中美一行的排列順序，而取打亂檔案的第一行。不然可以用<code>sort -R</code>代替。<br>同樣的也可以使用Pipe來達成工作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ random_line&#x3D;$(sort -R abcd | head -1)</span><br></pre></td></tr></table></figure>
+
+<h2 id="讀取前三個字串"><a href="#讀取前三個字串" class="headerlink" title="讀取前三個字串"></a>讀取前三個字串</h2><p>假設目前檔案內容是<code>aaa bbb ccc ddd eee</code>。我們可以用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ read -r var1 var2 var3 throwaway &lt; file</span><br></pre></td></tr></table></figure>
+<p>如果不在var3後面加個變數的話，var3的內容救變成<code>ccc ddd eee</code>了。<br>如果你根本不關心throwaway內容的話，可以寫成</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ read -r var1 var2 var3 _ &lt; file</span><br></pre></td></tr></table></figure>
+<p>如果檔案內容是<code>aaa bbb</code>的話，var3的內容就是空的。</p>
+<h2 id="讀取一個文件檔有幾行，幾個單字，字元數目"><a href="#讀取一個文件檔有幾行，幾個單字，字元數目" class="headerlink" title="讀取一個文件檔有幾行，幾個單字，字元數目"></a>讀取一個文件檔有幾行，幾個單字，字元數目</h2><p>同樣的，以上面<code>aaa bbb ccc ddd eee</code>為範例。基本上就是上面的技巧，加上wc的輸出結果。wc的用法google一下即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ read -r lines words chars _ &lt; &lt;(wc abcd)</span><br></pre></td></tr></table></figure>
+
+<h2 id="直接從字串中讀取資料"><a href="#直接從字串中讀取資料" class="headerlink" title="直接從字串中讀取資料"></a>直接從字串中讀取資料</h2><p>假設我們現在有個字串$info叫做`20 packets in 10 seconds”，如何取出packets跟time。<br>使用awk的作法會是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ packets&#x3D;$(echo $info | awk &#39;&#123; print $1 &#125;&#39;)</span><br><span class="line">$ time&#x3D;$(echo $info | awk &#39;&#123; print $4 &#125;&#39;)</span><br></pre></td></tr></table></figure>
+<p>透過<a href="http://linux.die.net/abs-guide/x15683.html" target="_blank" rel="noopener">Here strings</a>跟read指令可以寫的更輕鬆</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ read packets _ _ time _ &lt;&lt;&lt; $info</span><br></pre></td></tr></table></figure>
+
+<h2 id="獲得檔案的大小"><a href="#獲得檔案的大小" class="headerlink" title="獲得檔案的大小"></a>獲得檔案的大小</h2><p>一樣是wc的用法，只不過現在只需要char count。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ size&#x3D;$(wc -c &lt; file)</span><br></pre></td></tr></table></figure>
+
+<h2 id="從文件路徑獲得文件名稱根目錄資訊"><a href="#從文件路徑獲得文件名稱根目錄資訊" class="headerlink" title="從文件路徑獲得文件名稱根目錄資訊"></a>從文件路徑獲得文件名稱根目錄資訊</h2><p>看起來很襖，不過實際上使用有其侷限。假設我們現在的路徑名稱是<code>/path/to/file.ext</code>，接著我們可以透過<a href="http://wiki.bash-hackers.org/syntax/pe" target="_blank" rel="noopener">parameter expansion</a>來擷取。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ dirname&#x3D;$&#123;path%&#x2F;*&#125;</span><br><span class="line">$ filename&#x3D;$&#123;path##*&#x2F;&#125;</span><br></pre></td></tr></table></figure>
+<p>不過檔案路徑改成非path開頭的，filename的定義也要跟著修改。</p>
+<h2 id="快速拷貝-搬移文件"><a href="#快速拷貝-搬移文件" class="headerlink" title="快速拷貝/搬移文件"></a>快速拷貝/搬移文件</h2><p>透過<a href="http://wiki.bash-hackers.org/syntax/expansion/brace" target="_blank" rel="noopener">Brace expansion</a>，可以方便我們做這件事。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ cp &#x2F;path&#x2F;to&#x2F;file&#123;, _copy&#125;  &#x2F;&#x2F; cp path&#x2F;to&#x2F;file path&#x2F;to&#x2F;file_copy</span><br><span class="line">$ mv ~&#x2F;work&#123;, _backup&#125; </span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2013/10/22/2013-10-22-how-to-remove-all-unused-linux-kernel-headers-images-and-modules/" rel="prev" title="How to Remove All Unused Linux Kernel Headers, Images and Modules">
+      <i class="fa fa-chevron-left"></i> How to Remove All Unused Linux Kernel Headers, Images and Modules
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2013/10/24/2013-10-24-sublime-text-2-tips/" rel="next" title="Sublime Text 2 Tips">
+      Sublime Text 2 Tips <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#替代，新增指定內容的字串到文件"><span class="nav-number">1.</span> <span class="nav-text">替代，新增指定內容的字串到文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新增字串到檔案最尾端"><span class="nav-number">2.</span> <span class="nav-text">新增字串到檔案最尾端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#清空檔案內容"><span class="nav-number">3.</span> <span class="nav-text">清空檔案內容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#讀取一行資料"><span class="nav-number">4.</span> <span class="nav-text">讀取一行資料</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#讀取文件的每一行"><span class="nav-number">5.</span> <span class="nav-text">讀取文件的每一行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#隨機讀取檔案的任合一行"><span class="nav-number">6.</span> <span class="nav-text">隨機讀取檔案的任合一行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#讀取前三個字串"><span class="nav-number">7.</span> <span class="nav-text">讀取前三個字串</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#讀取一個文件檔有幾行，幾個單字，字元數目"><span class="nav-number">8.</span> <span class="nav-text">讀取一個文件檔有幾行，幾個單字，字元數目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直接從字串中讀取資料"><span class="nav-number">9.</span> <span class="nav-text">直接從字串中讀取資料</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#獲得檔案的大小"><span class="nav-number">10.</span> <span class="nav-text">獲得檔案的大小</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#從文件路徑獲得文件名稱根目錄資訊"><span class="nav-number">11.</span> <span class="nav-text">從文件路徑獲得文件名稱根目錄資訊</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快速拷貝-搬移文件"><span class="nav-number">12.</span> <span class="nav-text">快速拷貝&#x2F;搬移文件</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

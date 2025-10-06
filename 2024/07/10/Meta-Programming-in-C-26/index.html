@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="與其說這是Reflection，這個比較像是General meta programming solution也就是Boost Hana所推薦的類型運算，將Type當作Value，然後對Type做處理的動作基本的操作就是這樣 12constexpr std::meta::info value &#x3D; ^^int;using Int &#x3D; typename[:value:]; 這裡的info是個opaqu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Meta Programming in C++26">
+<meta property="og:url" content="http://yoursite.com/2024/07/10/Meta-Programming-in-C-26/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="與其說這是Reflection，這個比較像是General meta programming solution也就是Boost Hana所推薦的類型運算，將Type當作Value，然後對Type做處理的動作基本的操作就是這樣 12constexpr std::meta::info value &#x3D; ^^int;using Int &#x3D; typename[:value:]; 這裡的info是個opaqu">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-07-10T17:08:03.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.629Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2024/07/10/Meta-Programming-in-C-26/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Meta Programming in C++26 | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2024/07/10/Meta-Programming-in-C-26/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Meta Programming in C++26
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-07-10 17:08:03" itemprop="dateCreated datePublished" datetime="2024-07-10T17:08:03+00:00">2024-07-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>與其說這是Reflection，這個比較像是General meta programming solution<br>也就是Boost Hana所推薦的類型運算，將Type當作Value，然後對Type做處理的動作<br>基本的操作就是這樣</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">constexpr</span> <span class="built_in">std</span>::meta::info value = ^^<span class="keyword">int</span>;</span><br><span class="line"><span class="keyword">using</span> Int = <span class="keyword">typename</span>[:value:];</span><br></pre></td></tr></table></figure>
+<p>這裡的info是個opaque type，只有Compiler看得懂，任何的操作要透過Meta function來進行</p>
+<p>在開始之前，先寫一個Helper function，好幫助做驗證</p>
+<h4 id="Helper-function"><a href="#Helper-function" class="headerlink" title="Helper function"></a>Helper function</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// start 'expand' definition</span></span><br><span class="line"><span class="keyword">namespace</span> __impl &#123;</span><br><span class="line">  <span class="keyword">template</span>&lt;<span class="keyword">auto</span>... vals&gt;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">replicator_type</span> &#123;</span></span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> F&gt;</span><br><span class="line">      <span class="keyword">constexpr</span> <span class="keyword">void</span> <span class="keyword">operator</span>&gt;&gt;(F body) <span class="keyword">const</span> &#123;</span><br><span class="line">        (body.<span class="keyword">template</span> <span class="keyword">operator</span>()&lt;vals&gt;(), ...);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">template</span>&lt;<span class="keyword">auto</span>... vals&gt;</span><br><span class="line">  replicator_type&lt;vals...&gt; replicator = &#123;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> R&gt;</span><br><span class="line"><span class="function"><span class="keyword">consteval</span> <span class="keyword">auto</span> <span class="title">expand</span><span class="params">(R range)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::meta::info&gt; args;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">auto</span> r : range) &#123;</span><br><span class="line">    args.push_back(<span class="built_in">std</span>::meta::reflect_value(r));</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> substitute(^^__impl::replicator, args);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// end 'expand' definition</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> S&gt;</span><br><span class="line">constexpr auto print_layout() -&gt; std::string &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">string</span> desc = <span class="string">"Print struct layout: "</span> + <span class="built_in">std</span>::<span class="built_in">string</span>(identifier_of(^^S)) + <span class="string">"\n"</span>;</span><br><span class="line">        desc += <span class="string">"members: &#123;\n"</span>;</span><br><span class="line">        [: expand(nonstatic_data_members_of(^^S)) :] &gt;&gt; [&amp;]&lt;<span class="keyword">auto</span> e&gt;() <span class="keyword">mutable</span> &#123;</span><br><span class="line">                desc += <span class="string">"    "</span> + <span class="built_in">std</span>::<span class="built_in">string</span>(identifier_of(e));</span><br><span class="line">                desc += <span class="string">" "</span> + <span class="built_in">std</span>::<span class="built_in">string</span>(identifier_of(type_of(e)));</span><br><span class="line">                desc += <span class="string">"\n"</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">        desc += <span class="string">"&#125;"</span>;</span><br><span class="line">        <span class="keyword">return</span> desc;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>測試範例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">X</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">char</span> a;</span><br><span class="line">    <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">double</span> c;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">auto</span> desc = print_layout&lt;X&gt;();</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; desc &lt;&lt; <span class="string">"\n"</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="無中生有，define-class"><a href="#無中生有，define-class" class="headerlink" title="無中生有，define_class"></a>無中生有，<code>define_class</code></h3><p>最簡單的例子</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span>;</span></span><br><span class="line"><span class="keyword">static_assert</span>(is_type(define_class(^^storage, &#123;data_member_spec(^^<span class="keyword">int</span>, &#123;.name=<span class="string">"value"</span>&#125;)&#125;)));</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">auto</span> desc = print_layout&lt;storage&gt;();</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; desc &lt;&lt; <span class="string">"\n"</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>印出來的結果</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Print struct layout: storage</span><br><span class="line">members: &#123;</span><br><span class="line">    value int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>從上面的程式碼，可以看出</p>
+<ul>
+<li>storage 是 forward declaration，沒有任何定義</li>
+<li>真正的定義是在<code>define_class(....)</code> 這裡</li>
+<li>必須使用<code>static_assert(is_type(....))</code>在編譯期完成</li>
+<li>宣告member field必須使用<code>data_member_spec</code><h4 id="Template-class"><a href="#Template-class" class="headerlink" title="Template class"></a>Template class</h4>如果我們想要產生類似<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span> &#123;</span></span><br><span class="line">	<span class="keyword">int</span> value[N];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+該怎麼做<h5 id="Step1"><a href="#Step1" class="headerlink" title="Step1"></a>Step1</h5>雖然無關緊要，不過我想把定義class的部分獨立成一個函數<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line">consteval auto define_storage() -&gt; std::meta::info &#123;</span><br><span class="line">	<span class="keyword">return</span> define_class(^^storage, &#123;data_member_spec(^^<span class="keyword">int</span>, &#123;.name=<span class="string">"value"</span>&#125;)&#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">using</span> T = [:define_storage&lt;<span class="number">10</span>&gt;():];</span><br></pre></td></tr></table></figure>
+這樣省下了<code>static_assert(is_type(...))</code> 的需求<h5 id="Step2"><a href="#Step2" class="headerlink" title="Step2"></a>Step2</h5>將storage的forward declaration改成這樣<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span>;</span></span><br></pre></td></tr></table></figure>
+<h5 id="Step3"><a href="#Step3" class="headerlink" title="Step3"></a>Step3</h5>修改define_storage的實作<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line">consteval auto define_storage() -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="keyword">return</span> define_class(substitute(^^storage, &#123;^^N&#125;), &#123;</span><br><span class="line">                data_member_spec(^^<span class="keyword">int</span>, &#123;.name=<span class="string">"value"</span>&#125;)</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+這邊有個<code>substitute</code>函數，第一個參數就是tempalte class，之後的參數就是要填入的直了，印出的結果類似這樣<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Print struct layout: storage</span><br><span class="line">members: &#123;</span><br><span class="line">    value int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+距離我們要的還差一點<h5 id="Step4"><a href="#Step4" class="headerlink" title="Step4"></a>Step4</h5>故技重施，定義一個新type<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">c_array_t</span> = T[N];</span><br></pre></td></tr></table></figure>
+然後再度修改<code>define_storage</code><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line">consteval auto define_storage() -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="keyword">return</span> define_class(substitute(^^storage, &#123;^^N&#125;), &#123;</span><br><span class="line">                data_member_spec(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">int</span>, ^^N&#125;), &#123;.name=<span class="string">"value"</span>&#125;)</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+這下子看到的是<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Print struct layout: storage</span><br><span class="line">members: &#123;</span><br><span class="line">    value c_array_t</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+有沒有辦法將<code>c_array_t</code>變回<code>int[10]</code><h5 id="Step5"><a href="#Step5" class="headerlink" title="Step5"></a>Step5</h5>加上<code>dealias</code>就行了，不過應該有更好的方法，暫時還沒想到<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line">consteval auto define_storage() -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="keyword">return</span> define_class(substitute(^^storage, &#123;^^N&#125;), &#123;</span><br><span class="line">                data_member_spec(dealias(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">int</span>, ^^N&#125;)), &#123;.name=<span class="string">"value"</span>&#125;)</span><br><span class="line">        &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+不過這方法跟原先的方法比，最大的好處是<strong>可程式化</strong>，可以創造出更特別的玩法，例如</li>
+</ul>
+<h4 id="Full-Partial-Template-Specialization"><a href="#Full-Partial-Template-Specialization" class="headerlink" title="Full(Partial) Template Specialization"></a>Full(Partial) Template Specialization</h4><p>將原先的範例改成這樣</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span> &#123;</span></span><br><span class="line">	<span class="keyword">int</span> value[N];</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">template</span> &lt;&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span>&lt;5&gt; &#123;</span></span><br><span class="line">        <span class="keyword">char</span> value[<span class="number">5</span>];</span><br><span class="line">        <span class="keyword">int</span> value2;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>我們一樣可以用<code>define_storage</code>來做</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt;</span><br><span class="line">consteval auto define_storage() -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::meta::info&gt; members;</span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(N == <span class="number">5</span>)</span> </span>&#123;</span><br><span class="line">                members.push_back(data_member_spec(dealias(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">char</span>, ^^N&#125;)), &#123;.name=<span class="string">"value"</span>&#125;));</span><br><span class="line">                members.push_back(data_member_spec(^^<span class="keyword">int</span>, &#123;.name=<span class="string">"value2"</span>&#125;));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                members.push_back(data_member_spec(dealias(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">int</span>, ^^N&#125;)), &#123;.name=<span class="string">"value"</span>&#125;));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> define_class(substitute(^^storage, &#123;^^N&#125;), members);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而Partial  Template Specialization 可以用同樣的方式處理</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N1, <span class="keyword">size_t</span> N2&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span> &#123;</span></span><br><span class="line">        <span class="keyword">int</span> value[N1];</span><br><span class="line">        <span class="keyword">int</span> value2[N2];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N1&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span>&lt;N1, 5&gt; &#123;</span></span><br><span class="line">        <span class="keyword">int</span> value1[N1];</span><br><span class="line">        <span class="keyword">char</span> value2[<span class="number">5</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>之後可以這樣寫</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N1, <span class="keyword">size_t</span> N2&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">storage</span>;</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N1, <span class="keyword">size_t</span> N2&gt;</span><br><span class="line">consteval auto define_storage() -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::meta::info&gt; members;</span><br><span class="line">        members.push_back(data_member_spec(dealias(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">int</span>, ^^N1&#125;)), &#123;.name=<span class="string">"value1"</span>&#125;));</span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(N2 == <span class="number">5</span>)</span> </span>&#123;</span><br><span class="line">                members.push_back(data_member_spec(dealias(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">char</span>, ^^N2&#125;)), &#123;.name=<span class="string">"value2"</span>&#125;));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                members.push_back(data_member_spec(dealias(substitute(^^<span class="keyword">c_array_t</span>, &#123;^^<span class="keyword">int</span>, ^^N2&#125;)), &#123;.name=<span class="string">"value2"</span>&#125;));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> define_class(substitute(^^storage, &#123;^^N1, ^^N2&#125;), members);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Implement-Pick-Omit-in-TypeScript"><a href="#Implement-Pick-Omit-in-TypeScript" class="headerlink" title="Implement Pick/Omit in TypeScript"></a>Implement Pick/Omit in TypeScript</h4><p>Typescript裡面有一個Pick Utility</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Person = &#123;</span><br><span class="line">  firstName: <span class="built_in">string</span>;</span><br><span class="line">  lastName: <span class="built_in">string</span>;</span><br><span class="line">  age: <span class="built_in">number</span>;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">type</span> PersonName = Pick&lt;Person, <span class="string">'firstName'</span> | <span class="string">'lastName'</span>&gt;;</span><br></pre></td></tr></table></figure>
+<p>這裡的<code>PersonName</code>就等同於</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PersonName = &#123;</span><br><span class="line">  firstName: <span class="built_in">string</span>;</span><br><span class="line">  lastName: <span class="built_in">string</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>C++的等價版本應該是這樣</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> From, <span class="keyword">typename</span> To&gt;</span><br><span class="line">consteval auto Pick(std::initializer_list&lt;std::string_view&gt; keeps) -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::meta::info&gt; members;</span><br><span class="line">        [: expand(nonstatic_data_members_of(^^From)) :] &gt;&gt; [&amp;]&lt;<span class="keyword">auto</span> e&gt;() <span class="keyword">mutable</span> &#123;</span><br><span class="line">                <span class="keyword">auto</span> it = <span class="built_in">std</span>::ranges::find(keeps, identifier_of(e));</span><br><span class="line">                <span class="keyword">if</span> (it != keeps.end()) &#123;</span><br><span class="line">                        members.push_back(data_member_spec(type_of(e), &#123;.name=identifier_of(e)&#125;));</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="keyword">return</span> define_class(^^To, members);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Person</span> &#123;</span></span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">string</span> firstName;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">string</span> lastName;</span><br><span class="line">        <span class="keyword">int</span> age;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">PersonName</span>;</span></span><br><span class="line"><span class="keyword">static_assert</span>(is_type(Pick&lt;Person, PersonName&gt;(&#123; <span class="string">"firstName"</span>, <span class="string">"lastName"</span> &#125;)));</span><br></pre></td></tr></table></figure>
+<p>應該可以更好，不過目前想不到怎麼做<br>Omit只是Pick的反操作，這邊就不寫了</p>
+<h4 id="Revisit-Boost-MP11"><a href="#Revisit-Boost-MP11" class="headerlink" title="Revisit Boost MP11"></a>Revisit Boost MP11</h4><p>以下是MP11的一個範例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> L = <span class="built_in">std</span>::tuple&lt;<span class="keyword">void</span>, <span class="keyword">int</span>, <span class="keyword">float</span>&gt;;</span><br><span class="line"><span class="keyword">using</span> R = mp_transform&lt;<span class="built_in">std</span>::<span class="keyword">add_pointer_t</span>, L&gt;;</span><br><span class="line"><span class="keyword">static_assert</span>(<span class="built_in">std</span>::is_same_v&lt;R, <span class="built_in">std</span>::tuple&lt;<span class="keyword">void</span>*, <span class="keyword">int</span>*, <span class="keyword">float</span>*&gt;&gt;);</span><br></pre></td></tr></table></figure>
+<p>可以用Meta Programming重寫</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt; <span class="keyword">typename</span> T&gt;</span><br><span class="line">consteval auto transform(std::meta::info (&amp;F)(std::meta::info)) -&gt; std::meta::info &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::meta::info&gt; new_members;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> member : template_arguments_of(^^T)) &#123;</span><br><span class="line">                new_members.push_back(F(member));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> substitute(template_of(^^T), new_members);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">using</span> L = <span class="built_in">std</span>::tuple&lt;<span class="keyword">void</span>, <span class="keyword">int</span>, <span class="keyword">float</span>&gt;;</span><br><span class="line"><span class="keyword">using</span> R = [:transform&lt;L&gt;(<span class="built_in">std</span>::meta::type_add_pointer):];</span><br><span class="line"><span class="keyword">static_assert</span>(<span class="built_in">std</span>::is_same_v&lt;R, <span class="built_in">std</span>::tuple&lt;<span class="keyword">void</span>*, <span class="keyword">int</span>*, <span class="keyword">float</span>*&gt;&gt;);</span><br></pre></td></tr></table></figure>
+<p>省去了很多以往的Template Magic</p>
+<h3 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h3><p>Reflection如果如期進入C++26，會是極大的變化<br>只希望一切順利</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><ul>
+<li><a href="https://isocpp.org/files/papers/P2996R4.html" target="_blank" rel="noopener">Reflection for C++26</a></li>
+<li>[Reflection for C++26](<a href="https://www.cppmore.com/2024/02/08/reflection-for-cpp26/" target="_blank" rel="noopener">https://www.cppmore.com/2024/02/08/reflection-for-cpp26/</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/661692275" target="_blank" rel="noopener">C++26 静态反射提案解析 - 知乎 (zhihu.com)</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/06/19/Redefinition-type-in-the-same-scope-for-C23/" rel="prev" title="Redefinition type in the same scope for C23">
+      <i class="fa fa-chevron-left"></i> Redefinition type in the same scope for C23
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/07/25/goto-and-computed-goto/" rel="next" title="goto and computed goto">
+      goto and computed goto <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Helper-function"><span class="nav-number">1.</span> <span class="nav-text">Helper function</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#無中生有，define-class"><span class="nav-number"></span> <span class="nav-text">無中生有，define_class</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Template-class"><span class="nav-number">1.</span> <span class="nav-text">Template class</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Step1"><span class="nav-number">1.1.</span> <span class="nav-text">Step1</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Step2"><span class="nav-number">1.2.</span> <span class="nav-text">Step2</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Step3"><span class="nav-number">1.3.</span> <span class="nav-text">Step3</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Step4"><span class="nav-number">1.4.</span> <span class="nav-text">Step4</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Step5"><span class="nav-number">1.5.</span> <span class="nav-text">Step5</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Full-Partial-Template-Specialization"><span class="nav-number">2.</span> <span class="nav-text">Full(Partial) Template Specialization</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Implement-Pick-Omit-in-TypeScript"><span class="nav-number">3.</span> <span class="nav-text">Implement Pick&#x2F;Omit in TypeScript</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Revisit-Boost-MP11"><span class="nav-number">4.</span> <span class="nav-text">Revisit Boost MP11</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Conclusion"><span class="nav-number"></span> <span class="nav-text">Conclusion</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number"></span> <span class="nav-text">Reference</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

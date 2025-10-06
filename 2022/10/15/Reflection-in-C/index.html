@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="原理1234567891011121314151617181920212223#include &lt;iostream&gt;#include &lt;string&gt;struct Test &amp;#123;        int index;        std::string name;        void printInfo() const &amp;#123;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Reflection in C++">
+<meta property="og:url" content="http://yoursite.com/2022/10/15/Reflection-in-C/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="原理1234567891011121314151617181920212223#include &lt;iostream&gt;#include &lt;string&gt;struct Test &amp;#123;        int index;        std::string name;        void printInfo() const &amp;#123;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-10-15T19:27:39.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.629Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2022/10/15/Reflection-in-C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Reflection in C++ | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/10/15/Reflection-in-C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Reflection in C++
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-10-15 19:27:39" itemprop="dateCreated datePublished" datetime="2022-10-15T19:27:39+00:00">2022-10-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test</span> &#123;</span></span><br><span class="line">        <span class="keyword">int</span> index;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">string</span> name;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">printInfo</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">                <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"index: "</span> &lt;&lt; index &lt;&lt; <span class="string">", name: "</span> &lt;&lt; name &lt;&lt; <span class="string">"\n"</span>;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        Test test;</span><br><span class="line">        test.index = <span class="number">1</span>;</span><br><span class="line">        test.name = <span class="string">"test_1"</span>;</span><br><span class="line">        test.printInfo();</span><br><span class="line">        <span class="keyword">auto</span> index_addr = &amp;Test::index;</span><br><span class="line">        <span class="keyword">auto</span> name_addr = &amp;Test::name;</span><br><span class="line">        <span class="keyword">auto</span> fun_print_addr = &amp;Test::printInfo;</span><br><span class="line">        test.*index_addr = <span class="number">2</span>;</span><br><span class="line">        test.*name_addr = <span class="string">"test_2"</span>;</span><br><span class="line">        (test.*fun_print_addr)();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>透過上面的<code>index_addr</code>，<code>name_addr</code>，<code>fun_print_addr</code>等，可以對object進行操作<br>而反射主要分成兩部分</p>
+<ul>
+<li>Metadata generation<br>和C++ object有關的information就叫做metadata，如上面的例子，這邊的困難點是如何減少工作量</li>
+<li>Metadata Reflection<br>既然有了Metadata，如何跟現實使用上連結起來</li>
+</ul>
+<p>雖然目前的官方標準還沒出來，不過現在有兩大流派</p>
+<h3 id="手工打造"><a href="#手工打造" class="headerlink" title="手工打造"></a>手工打造</h3><p>什麼辦不到的事情，用Marco就好了<br>以Boost Describe舉例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">X</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">int</span> m1;</span><br><span class="line">    <span class="keyword">int</span> m2;</span><br><span class="line">&#125;;</span><br><span class="line">BOOST_DESCRIBE_STRUCT(X, (), (m1, m2))</span><br></pre></td></tr></table></figure>
+<p>其他Macro Based的方案也差不多，就是另外定義一個Macro，自動生成類似上面的Metadata<br>不過這邊的問題就是</p>
+<ul>
+<li>你要同時維護兩份資料的一致性</li>
+<li>Macro滿天飛</li>
+<li>修改困難 (因為都是Marco的黑魔法，要新增功能就得對Marco動刀)</li>
+</ul>
+<h3 id="libclang"><a href="#libclang" class="headerlink" title="libclang"></a>libclang</h3><p>另外一派就是借助libclang來動手生成，透過Parse C++ AST來生成需要的API<br>舉例說明</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">int</span> field = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">int</span> static_field;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">method</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">static_method</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>生成的Metadata可以這麼使用</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">reflang::Class&lt;MyClass&gt; metadata;</span><br><span class="line">MyClass c;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Modify / use c's 'field'.</span></span><br><span class="line">reflang::Reference ref = metadata.GetField(c, <span class="string">"field"</span>);</span><br><span class="line">ref.GetT&lt;<span class="keyword">int</span>&gt;() = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Modify / use 'static_field'.</span></span><br><span class="line">ref = metadata.GetStaticField(<span class="string">"static_field"</span>)</span><br><span class="line">ref.GetT&lt;<span class="keyword">int</span>&gt;() = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Execute 'method()'.</span></span><br><span class="line"><span class="keyword">auto</span> methods = metadata.GetMethod(<span class="string">"method"</span>);</span><br><span class="line">(*methods[<span class="number">0</span>])(c);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Execute 'static_method()'.</span></span><br><span class="line"><span class="keyword">auto</span> methods = metadata.GetStaticMethod(<span class="string">"static_method"</span>);</span><br><span class="line">(*methods[<span class="number">0</span>])();</span><br></pre></td></tr></table></figure>
+<p>這個方案的問題在於</p>
+<ul>
+<li>要有libclang才能用</li>
+<li>構建的時候會多一個步驟，必須掃描所有的檔案，生成需要的header/sources，修改Makefile/CMakeLists.txt來調整編譯流程</li>
+</ul>
+<h3 id="Reflection-API-in-the-future"><a href="#Reflection-API-in-the-future" class="headerlink" title="Reflection API in the future"></a>Reflection API in the future</h3><p>雖然現有的Reflection library多的跟山一樣，不過眾口難調，有些是針對特定用途設計的，無法涵蓋其他方面的使用，有些功能完整，但是難用<br>於是乎就有人想要對語法方面下手，成為C++ Standard中的一部分</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">void</span> <span class="title">print_type</span>() &#123;</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"void "</span></span><br><span class="line">              &lt;&lt; get_name_v&lt;reflexpr(print_type&lt;T&gt;)&gt; <span class="comment">// guaranteed "print_type"</span></span><br><span class="line">              &lt;&lt; <span class="string">"() [with T = "</span></span><br><span class="line">              &lt;&lt; get_display_name_v&lt;reflexpr(T)&gt; </span><br><span class="line">              &lt;&lt; <span class="string">"]"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>reflexpr和decltype一樣是type-based，所以可以套用到type based metaprogramming中<br>不過會不會成為標準是另外一回事了<br>跟Network Library一樣，成為標準之前先用成熟的方案解決</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/88144082" target="_blank" rel="noopener">现代 C++ 编译时 结构体字段反射</a></li>
+<li><a href="https://www.boost.org/doc/libs/master/libs/describe/doc/html/describe.html" target="_blank" rel="noopener">Boost Describe</a></li>
+<li><a href="https://github.com/chakaz/reflang" target="_blank" rel="noopener">Reflang - Modern C++ reflection using libclang</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/keyword/reflexpr" target="_blank" rel="noopener">C++ keywords: reflexpr (reflection TS) </a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/09/How-to-write-comparsion-operator-for-custom-type-in-C/" rel="prev" title="How to write comparsion operator for custom type in C++">
+      <i class="fa fa-chevron-left"></i> How to write comparsion operator for custom type in C++
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/06/Allocator-in-C/" rel="next" title="Allocator in C++">
+      Allocator in C++ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#原理"><span class="nav-number">1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#手工打造"><span class="nav-number">2.</span> <span class="nav-text">手工打造</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#libclang"><span class="nav-number">3.</span> <span class="nav-text">libclang</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reflection-API-in-the-future"><span class="nav-number">4.</span> <span class="nav-text">Reflection API in the future</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

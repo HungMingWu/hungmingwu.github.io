@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="安裝 Emscripten SDK首先必須先安裝以下package 1$ apt-get install wget python git g++ cmake nodejs 從[網站(http:&#x2F;&#x2F;kripken.github.io&#x2F;emscripten-site&#x2F;docs&#x2F;getting_started&#x2F;downloads.html)下載Portable SDK進行編譯安裝。安裝過程如下 1234">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Introduction to Emscripten, asm.js, WebAssembly">
+<meta property="og:url" content="http://yoursite.com/2017/01/15/2017-01-15-introduction-to-emscripten-asn-js-webassembly/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="安裝 Emscripten SDK首先必須先安裝以下package 1$ apt-get install wget python git g++ cmake nodejs 從[網站(http:&#x2F;&#x2F;kripken.github.io&#x2F;emscripten-site&#x2F;docs&#x2F;getting_started&#x2F;downloads.html)下載Portable SDK進行編譯安裝。安裝過程如下 1234">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2017-01-15T13:57:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.625Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2017/01/15/2017-01-15-introduction-to-emscripten-asn-js-webassembly/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Introduction to Emscripten, asm.js, WebAssembly | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/15/2017-01-15-introduction-to-emscripten-asn-js-webassembly/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Introduction to Emscripten, asm.js, WebAssembly
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2017-01-15 13:57:00" itemprop="dateCreated datePublished" datetime="2017-01-15T13:57:00+00:00">2017-01-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="安裝-Emscripten-SDK"><a href="#安裝-Emscripten-SDK" class="headerlink" title="安裝 Emscripten SDK"></a>安裝 Emscripten SDK</h1><p>首先必須先安裝以下package</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ apt-get install wget python git g++ cmake nodejs</span><br></pre></td></tr></table></figure>
+<p>從[網站(<a href="http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)下載Portable" target="_blank" rel="noopener">http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)下載Portable</a> SDK進行編譯安裝。安裝過程如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ tar zxvf emsdk-portable.tar.gz</span><br><span class="line">$ <span class="built_in">cd</span> emsdk_portable</span><br><span class="line">$ ./emsdk update</span><br><span class="line">$ ./emsdk install clang-tag-e1.34.1-64bit</span><br><span class="line">$ ./emsdk install emscripten-tag-1.34.1-64bit</span><br><span class="line">$ ./emsdk activate</span><br><span class="line">$ ./emsdk_env.sh</span><br></pre></td></tr></table></figure>
+<p>修改~/.emscripten`</p>
+<blockquote>
+<p> NODE_JS         = nodejs</p>
+</blockquote>
+<p>寫個程式測試</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">( )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Hello World!\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>將奇編譯成Javascript</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./emcc hello.c -o hello.out.js</span><br></pre></td></tr></table></figure>
+<p>用nodejs執行它</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ nodejs hello.out.js</span><br></pre></td></tr></table></figure>
+<h3 id="Asm-js"><a href="#Asm-js" class="headerlink" title="Asm.js"></a>Asm.js</h3><p>Asm.js是Javascript的一個子集合，限制Javascript的特性，使其能夠對應體作最佳化。在編譯時加上<code>-s ASM_JS=1</code>即可。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./emcc -s ASM_JS=1 hello.c -o hello.out.js</span><br></pre></td></tr></table></figure>
+<p>如果有需要的話可以參考</p>
+<ul>
+<li><a href="http://blog.gtwang.org/web-development/asm-js-emscripten-1/" target="_blank" rel="noopener">asm.js 架構與 Emscripten 編譯器：Mozilla 在網頁上發展出接近原生（Native）程式效能的 JavaScript 程式（一）</a></li>
+<li><a href="http://blog.gtwang.org/web-development/asm-js-emscripten-2/" target="_blank" rel="noopener">asm.js 架構與 Emscripten 編譯器：Mozilla 在網頁上發展出接近原生（Native）程式效能的 JavaScript 程式（二）</a></li>
+<li><a href="http://blog.gtwang.org/web-development/asm-js-emscripten-3/" target="_blank" rel="noopener">asm.js 架構與 Emscripten 編譯器：Mozilla 在網頁上發展出接近原生（Native）程式效能的 JavaScript 程式（三）</a></li>
+</ul>
+<h3 id="WebAssembly"><a href="#WebAssembly" class="headerlink" title="WebAssembly"></a>WebAssembly</h3><p>最近新推出來的玩意，在2016年各家Browsers終於推出preview版本，而Emscripten更能直接輸出WebAssembly<br>請參考<a href="https://github.com/kripken/emscripten/wiki/WebAssembly" target="_blank" rel="noopener">WebAssembly</a><br>另外一個方式就是使用自定義的<a href="https://gist.github.com/yurydelendik/4eeff8248aeb14ce763e" target="_blank" rel="noopener">clang來輸出WebAssembly</a></p>
+<p>其他的參考連結<br>— <a href="https://www.autodeskresearch.com/blog/look-web-assembly-and-molecular-analysis" target="_blank" rel="noopener">A Look at Web Assembly and Molecular Analysis</a><br>— <a href="https://tutorials.technology/tutorials/11-webassembly-initial-steps-tutorial.html" target="_blank" rel="noopener">Webassembly initial steps tutorial or how to start with wasm</a></p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><ul>
+<li><a href="http://kripken.github.io/emscripten-site/docs/getting_started/Tutorial.html" target="_blank" rel="noopener">Tutorial</a></li>
+<li><a href="https://brendaneich.com/2015/06/from-asm-js-to-webassembly/" target="_blank" rel="noopener">From ASM.JS to WebAssembly</a></li>
+<li><a href="https://vimeo.com/131634706" target="_blank" rel="noopener">C++ on the Web: ponies for developers without pwn’ing users</a></li>
+<li><a href="https://github.com/WebAssembly/design/blob/master/FAQ.md" target="_blank" rel="noopener">WebAssemblydesign FAQ</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/12/05/2016-12-05-1174031/" rel="prev" title="Range based's erase on C++">
+      <i class="fa fa-chevron-left"></i> Range based's erase on C++
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/01/17/2017-01-17-1322694/" rel="next" title="Use std::variant to represent composite design pattern">
+      Use std::variant to represent composite design pattern <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#安裝-Emscripten-SDK"><span class="nav-number">1.</span> <span class="nav-text">安裝 Emscripten SDK</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Asm-js"><span class="nav-number">1.0.1.</span> <span class="nav-text">Asm.js</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WebAssembly"><span class="nav-number">1.0.2.</span> <span class="nav-text">WebAssembly</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">1.0.3.</span> <span class="nav-text">Reference</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

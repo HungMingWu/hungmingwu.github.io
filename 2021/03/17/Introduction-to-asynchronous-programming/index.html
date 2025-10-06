@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Asynchronous programmingWhy asynchronous programmingAsynchronous programming 是個反人類的思考的東西，就算選擇不同的程式語言，共識最好的Network programming model，都是這個樣子，一個connection一個thread 1234567891011listen(socket_fd, 20);&#x2F;* Lo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Introduction to asynchronous programming">
+<meta property="og:url" content="http://yoursite.com/2021/03/17/Introduction-to-asynchronous-programming/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="Asynchronous programmingWhy asynchronous programmingAsynchronous programming 是個反人類的思考的東西，就算選擇不同的程式語言，共識最好的Network programming model，都是這個樣子，一個connection一個thread 1234567891011listen(socket_fd, 20);&#x2F;* Lo">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ithelp.ithome.com.tw/upload/images/20171221/20065504RIRldpL7Fs.jpg">
+<meta property="article:published_time" content="2021-03-17T20:14:02.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.628Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="Programming">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ithelp.ithome.com.tw/upload/images/20171221/20065504RIRldpL7Fs.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2021/03/17/Introduction-to-asynchronous-programming/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Introduction to asynchronous programming | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/03/17/Introduction-to-asynchronous-programming/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Introduction to asynchronous programming
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-03-17 20:14:02" itemprop="dateCreated datePublished" datetime="2021-03-17T20:14:02+00:00">2021-03-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Asynchronous-programming"><a href="#Asynchronous-programming" class="headerlink" title="Asynchronous programming"></a>Asynchronous programming</h1><h2 id="Why-asynchronous-programming"><a href="#Why-asynchronous-programming" class="headerlink" title="Why asynchronous programming"></a>Why asynchronous programming</h2><p>Asynchronous programming 是個反人類的思考的東西，就算選擇不同的程式語言，共識最好的Network programming model，都是這個樣子，一個connection一個thread</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">listen</span>(socket_fd, <span class="number">20</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Looooop */</span></span><br><span class="line"><span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">  newsocket_fd = accept(socket_fd, </span><br><span class="line">                          (struct sockaddr *) &amp;client_addr, </span><br><span class="line">                          &amp;client_len);</span><br><span class="line">  <span class="keyword">pthread_t</span> thread;</span><br><span class="line">  pthread_create(&amp;thread, <span class="literal">NULL</span>, run_thread, (<span class="keyword">void</span> *) newsocket_fd);</span><br><span class="line">  pthread_join(thread, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這個Model可以解決95%的問題，不過人生最難的就是那個But，這個Programming Model不能Scale</p>
+<h2 id="C10K-Problem-1999"><a href="#C10K-Problem-1999" class="headerlink" title="C10K Problem (1999)"></a>C10K Problem (1999)</h2><p>這就是著名的C10K Problem，是Operation System的問題，OS不能有跟Connection一樣多的Thread，就算可以，也會耗費大量的Memory，以及頻繁的Context Switch<br>山不轉路轉，於是出現了IO multiplexing技術，也就是大家熟知的select/poll/epoll</p>
+<h2 id="The-early-stage-of-asynchronous-programming"><a href="#The-early-stage-of-asynchronous-programming" class="headerlink" title="The early stage of asynchronous programming"></a>The early stage of asynchronous programming</h2><p>一開始的asynchronous programming，就算是libuv，asio或是nodejs等，都需要一個callback當參數，寫著寫著就會變成這樣<br><img src="https://ithelp.ithome.com.tw/upload/images/20171221/20065504RIRldpL7Fs.jpg" alt=""></p>
+<h3 id="The-problem-of-callback"><a href="#The-problem-of-callback" class="headerlink" title="The problem of callback"></a>The problem of callback</h3><ul>
+<li>反人類</li>
+</ul>
+<p>Thread based solution之所以被推崇，就是人類的思考模式傾向於直線思考，而Callback based solution需要將步驟切得七零八落，慘不忍睹</p>
+<ul>
+<li>難寫易錯</li>
+</ul>
+<p>假設事務夠簡單，一兩層callback就能解決的話，事情還好辦，當邏輯複雜到一個程度，寫錯的機率實在是太高了</p>
+<p>Source Code是要寫給人看的，因此需要有工具來管理複雜度，也就是Coroutine</p>
+<h3 id="System-Language對於Coroutine的態度"><a href="#System-Language對於Coroutine的態度" class="headerlink" title="System Language對於Coroutine的態度"></a>System Language對於Coroutine的態度</h3><ul>
+<li>C：不關我的事，你自己想辦法</li>
+<li>C++： 到了2021年還沒有標準的Network Library：會不會太落後</li>
+<li>Rust： 比C++早訂定標準：不過押寶押錯了：標準也定了：改不了了：至於押寶押錯這件事後面再說</li>
+</ul>
+<h3 id="What-is-coroutine"><a href="#What-is-coroutine" class="headerlink" title="What is coroutine"></a>What is coroutine</h3><p>太陽底下沒有新鮮事，Coroutine在1963年就被提出，過了五十年後重新被人想起<br>Coroutine擁有以下四種特性</p>
+<ul>
+<li>Invoke</li>
+<li>Return</li>
+<li>Yield </li>
+<li>Resume</li>
+</ul>
+<p>而我們一般所知道的Function就只有</p>
+<ul>
+<li>Invoke</li>
+<li>Return</li>
+</ul>
+<p>也就是Function只是Coroutine的特殊案例</p>
+<p>Coroutine的另一項特性</p>
+<ul>
+<li>Cooperative multitasking</li>
+</ul>
+<p>同樣的，太陽底下沒有新鮮事<br>聽過當初Windows 3.1常常會程式卡死，而Windows 95不會，就是因為將<code>Cooperative multitasking</code>改成<code>Pre-emptive multitasking</code></p>
+<h4 id="The-simplest-example-on-coroutine"><a href="#The-simplest-example-on-coroutine" class="headerlink" title="The simplest example on coroutine"></a>The simplest example on coroutine</h4><p>雖然這範例沒什麼用，不過能夠讓我們了解Corotuine的本質，能夠Yield和Resume<br>switch的case可以包含在for loop迴圈裡面，不過蔗不是本文重點</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">counter</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> i, state = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">switch</span> (state) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>: <span class="comment">/* start of function */</span></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">            state = <span class="number">1</span>; <span class="comment">/* so we will come back to "case 1" */</span></span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">            <span class="keyword">case</span> <span class="number">1</span>:; <span class="comment">/* resume control straight after the return */</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d\n"</span>, counter());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面這個只是個玩具Coroutine，真正能拿來用的還分幾類<br>至於怎麼做就各顯神通了</p>
+<ul>
+<li><a href="https://probablydance.com/2012/11/18/implementing-coroutines-with-ucontext/" target="_blank" rel="noopener">Implementing coroutines with ucontext</a></li>
+<li><a href="https://gist.github.com/aprell/1951574" target="_blank" rel="noopener">Switching between coroutines/tasks: setjmp/longjmp (single stack)</a></li>
+<li><a href="http://www.softpanorama.org/Lang/Asmorama/coroutines_in_assembler.shtml" target="_blank" rel="noopener">Coroutines in Assembler</a></li>
+</ul>
+<h4 id="Two-difference-model-on-Coroutine"><a href="#Two-difference-model-on-Coroutine" class="headerlink" title="Two difference model on Coroutine"></a>Two difference model on Coroutine</h4><p>就算是Coroutine，也可以分成兩類</p>
+<ul>
+<li>Stackful Coroutine</li>
+<li>Stackless Coroutine<br>顧名思義，差異就在對Stack的處理上面</li>
+<li>Stackless將State放在Heap上，而Stackful放在Stack上</li>
+<li>Stackless的大小是動態分配的，Stackful的Stack是固定大小的</li>
+<li>Stackless本質是個StateMachine，而Stackful是個User Mode Thread<br>因此Stackess Machine的Runtime消耗比較小，Stackful相反</li>
+<li>Stackful可以和舊有的synchronous code組合，Stackless不行</li>
+<li>Stackless需要Compilier支援，Stackful只需要Library就能做了</li>
+<li>Stackless的方案有傳染性，例如你在Javascrupt所看到的<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> func1() &#123;</span><br><span class="line">  <span class="keyword">await</span> func2();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+你的async/await是成雙成對的，布這麼用就會出錯，而Stackful沒有此限制</li>
+<li>Stackful的程式好寫，Stackless需要一定能力</li>
+</ul>
+<h4 id="選邊站"><a href="#選邊站" class="headerlink" title="選邊站"></a>選邊站</h4><p>由於兩種Model差異很大，由於程式語言的特性以及歷史因素，不同程式語言的選擇也不一樣</p>
+<ul>
+<li>Stackless：C#(第一個使用async/await的主流語言)，Javascript，Python，C++，Rust，Kotlin(雖然是JVM的語言，不過跟Java選擇不同)</li>
+<li>Stackful：Golang(其實是變種的Coroutine)，Java(照抄Golang那套，不過還沒推出)，PHP(in the future)</li>
+</ul>
+<h4 id="Goroutine"><a href="#Goroutine" class="headerlink" title="Goroutine"></a>Goroutine</h4><p>前面提到，Goroutine是Stackful Coroutine的變形，最主要的差異在於</p>
+<ul>
+<li>coroutine是順序執行</li>
+<li>Goroutine可以在多個cpu平行執行的<br>因此又產生了分歧點<br>假設我們有Coroutine A，B，C<br>C等待B的資料，B等待A的資料</li>
+<li>如果是傳統的Coroutine，A執行完會transfer到B，B執行完會transfer到C，由於在同一個CPU上，資料不用加鎖</li>
+<li>如果是Goroutine，A，B，C三者可能在不同的CPU上跑，關於資料的傳遞只能透過Channel</li>
+<li>由於Golang實作了一個有效利用Cpu Usage的Runtime，將corotuine定義成light weight thread，所以Golang Runtime需要做一部分OS需要做的事情，例如Schedule coroutine</li>
+<li>Mandatory goroutine，就算你寫一個hello world也避不掉</li>
+<li>Goroutine不快，Maximum network connection也比不上Stackless Coroutine(C++/Rust)</li>
+<li>不過程式好寫太多，這強項才是goroutine搶走PHP/Python的主要原因</li>
+</ul>
+<h3 id="押錯寶"><a href="#押錯寶" class="headerlink" title="押錯寶"></a>押錯寶</h3><p>講講Rust押寶押錯的故事</p>
+<h4 id="IO-Model有兩種"><a href="#IO-Model有兩種" class="headerlink" title="IO Model有兩種"></a>IO Model有兩種</h4><p>如同Coroutine有兩種，IO EventLoop也有兩種</p>
+<ul>
+<li>Proactor：最著名的就是Windows的IOCP了</li>
+<li>Reactor：select/poll/epoll等都是<br>Rust使用epoll的Reactor Model，不過epoll不是linux的未來</li>
+</ul>
+<h4 id="CPU-Spectre-and-Meltdown"><a href="#CPU-Spectre-and-Meltdown" class="headerlink" title="CPU Spectre and Meltdown"></a>CPU Spectre and Meltdown</h4><p>就跟COVID-19一樣，Spectre和Meltdown改變了寫程式的方向<br>因為CPU的Bug，Linux修正方向，<code>io_uring</code>才是Linux的未來，而io_uring和IOCP一樣，是Proactor的model</p>
+<h4 id="Influence"><a href="#Influence" class="headerlink" title="Influence"></a>Influence</h4><p>由於標準定了，要改改不了了<br>如果要改的話只有兩種選擇</p>
+<ul>
+<li>重新制定標準，然後變成v2版本，光是制定一個版本花了四年，這次應該會快一點</li>
+<li>兩個Model是可以互轉的，只是會有Performance Loss，當Spectre和Meltdown的Patch打上去之後會掉多少更難以估計</li>
+</ul>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><ul>
+<li>如果你是那95%的人，根本用不上Asynchronous programming，直接使用thread model，還不容易錯</li>
+<li>如果不幸是那5%的人，首先考慮golang，golang就算幾千個缺點，goroutine都能掩蓋過去<br>golang適合寫網路服務，也只能寫網路服務</li>
+<li>如果你是一秒鐘幾千萬上下，出來跑得遲早都要還，逃不掉C/C++/Rust寫code了<br>這裡有個實際案例<br><a href="https://blog.discord.com/why-discord-is-switching-from-go-to-rust-a190bbca2b1f" target="_blank" rel="noopener">Why Discord is switching from Go to Rust</a></li>
+<li>沒有最好的方案，只有適合的方案</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Programming/" rel="tag"># Programming</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/03/15/Story-about-C-C-compiling-model/" rel="prev" title="Story about C/C++ compiling model">
+      <i class="fa fa-chevron-left"></i> Story about C/C++ compiling model
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/01/Empty-struct-empty-value-and-no-unique-address/" rel="next" title="Empty struct, empty_value and [[no_unique_address]]">
+      Empty struct, empty_value and [[no_unique_address]] <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Asynchronous-programming"><span class="nav-number">1.</span> <span class="nav-text">Asynchronous programming</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-asynchronous-programming"><span class="nav-number">1.1.</span> <span class="nav-text">Why asynchronous programming</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#C10K-Problem-1999"><span class="nav-number">1.2.</span> <span class="nav-text">C10K Problem (1999)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-early-stage-of-asynchronous-programming"><span class="nav-number">1.3.</span> <span class="nav-text">The early stage of asynchronous programming</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#The-problem-of-callback"><span class="nav-number">1.3.1.</span> <span class="nav-text">The problem of callback</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#System-Language對於Coroutine的態度"><span class="nav-number">1.3.2.</span> <span class="nav-text">System Language對於Coroutine的態度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#What-is-coroutine"><span class="nav-number">1.3.3.</span> <span class="nav-text">What is coroutine</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#The-simplest-example-on-coroutine"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">The simplest example on coroutine</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Two-difference-model-on-Coroutine"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">Two difference model on Coroutine</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#選邊站"><span class="nav-number">1.3.3.3.</span> <span class="nav-text">選邊站</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Goroutine"><span class="nav-number">1.3.3.4.</span> <span class="nav-text">Goroutine</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#押錯寶"><span class="nav-number">1.3.4.</span> <span class="nav-text">押錯寶</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#IO-Model有兩種"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">IO Model有兩種</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-Spectre-and-Meltdown"><span class="nav-number">1.3.4.2.</span> <span class="nav-text">CPU Spectre and Meltdown</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Influence"><span class="nav-number">1.3.4.3.</span> <span class="nav-text">Influence</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">1.4.</span> <span class="nav-text">Conclusion</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

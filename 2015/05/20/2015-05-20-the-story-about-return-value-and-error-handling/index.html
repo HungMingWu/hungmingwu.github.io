@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="這故事說起來還真不簡單，在寫Code的時候，往往與這兩樣東西牽扯不清。例如以下這段Code 123FILE *fp &#x3D; fopen( &quot;input.txt&quot;, &quot;r&quot;);if (fp &#x3D;&#x3D; NULL)	printf (&quot;  err %d \n&quot;, errno); fp代表著回傳的正常值，errno表示萬一錯誤的時候，可以供判斷的錯誤依據。不過就算是return value跟error code，也">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The story about return value and error handling">
+<meta property="og:url" content="http://yoursite.com/2015/05/20/2015-05-20-the-story-about-return-value-and-error-handling/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="這故事說起來還真不簡單，在寫Code的時候，往往與這兩樣東西牽扯不清。例如以下這段Code 123FILE *fp &#x3D; fopen( &quot;input.txt&quot;, &quot;r&quot;);if (fp &#x3D;&#x3D; NULL)	printf (&quot;  err %d \n&quot;, errno); fp代表著回傳的正常值，errno表示萬一錯誤的時候，可以供判斷的錯誤依據。不過就算是return value跟error code，也">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://fsharpforfunandprofit.com/assets/img/Recipe_Function_ErrorTrack.png">
+<meta property="article:published_time" content="2015-05-20T14:02:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.623Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://fsharpforfunandprofit.com/assets/img/Recipe_Function_ErrorTrack.png">
+
+<link rel="canonical" href="http://yoursite.com/2015/05/20/2015-05-20-the-story-about-return-value-and-error-handling/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>The story about return value and error handling | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/05/20/2015-05-20-the-story-about-return-value-and-error-handling/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          The story about return value and error handling
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-05-20 14:02:00" itemprop="dateCreated datePublished" datetime="2015-05-20T14:02:00+00:00">2015-05-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/" itemprop="url" rel="index"><span itemprop="name">c++</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/Rust/" itemprop="url" rel="index"><span itemprop="name">Rust</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>這故事說起來還真不簡單，在寫Code的時候，往往與這兩樣東西牽扯不清。<br>例如以下這段Code</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FILE *fp = fopen( <span class="string">"input.txt"</span>, <span class="string">"r"</span>);</span><br><span class="line"><span class="keyword">if</span> (fp == <span class="literal">NULL</span>)</span><br><span class="line">	<span class="built_in">printf</span> (<span class="string">"  err %d \n"</span>, errno);</span><br></pre></td></tr></table></figure>
+<p>fp代表著回傳的正常值，errno表示萬一錯誤的時候，可以供判斷的錯誤依據。<br>不過就算是return value跟error code，也有很長故事可以說。<br>以<code>$ f(x)=\frac{100}{\frac{100}{x}+1} $</code>當我們的範例，來討論各種處理return value跟error handleing</p>
+<h3 id="Global-state"><a href="#Global-state" class="headerlink" title="Global state"></a>Global state</h3><p>在設計API的時候，就完全沒考慮過Error這件事，如同上面的errno那樣，我們可以仿照使用一個global variable。<br>可能的作法如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> _errno;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> invalid_value = <span class="number">-1</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">g</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>) &#123;</span><br><span class="line">		_errno = <span class="number">-1</span>;</span><br><span class="line">		<span class="keyword">return</span> invalid_value;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">100</span> / x + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f</span><span class="params">(<span class="keyword">int</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> v1 = g(x);</span><br><span class="line">	<span class="keyword">if</span> (v1 == invalid_value)</span><br><span class="line">		<span class="keyword">return</span> v1;</span><br><span class="line">	<span class="keyword">if</span> (v1 == <span class="number">0</span>) &#123;</span><br><span class="line">		_errno = <span class="number">-2</span>;</span><br><span class="line">		<span class="keyword">return</span> invalid_value;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">100</span> / v1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這作法不難懂，不過有幾個很重大的缺點<br>– 需要對Return Value定義一個特蘇的值，代表這個值是無效的，而這個Return Value有可能跟值域的某個數值碰撞。例如上例的<code>f(-50)</code>，你不知道他是錯誤還是有效值。<br>– global variable表示任何人都有機會更動到，因此在Code的Maintain跟Protect上難很多<br>– Error很容易被忽略，因為沒有強制性，可能在實做內部，或是外部使用，都有可能因為Code的修改而跳過Error Code處理</p>
+<p>因此有了改良版的方法</p>
+<h3 id="Return-Error-and-Value-simultaneously"><a href="#Return-Error-and-Value-simultaneously" class="headerlink" title="Return Error and Value simultaneously"></a>Return Error and Value simultaneously</h3><p>上面方法的改良版</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">g</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> *retvalue)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	*retvalue = <span class="number">100</span> / x + <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> *retvalue)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> err = g(x, retvalue);</span><br><span class="line">	<span class="keyword">if</span> (err != <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">return</span> err;</span><br><span class="line">	<span class="keyword">if</span> (*retvalue == <span class="number">0</span>) </span><br><span class="line">		<span class="keyword">return</span> <span class="number">-2</span>;</span><br><span class="line">	*retvalue = <span class="number">100</span> / (*retvalue);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這邊的寫法類似於COM的作法，把return value放在最後一個參數，而errorcode當作return值傳回。<br>也可以像golang那樣傳回多個回傳質的方法，大同小異</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">f, err := os.Open(<span class="string">"filename.ext"</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    log.Fatal(err)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這方是解決了上述錢兩個問題，不過還是無法解決第三個問題</p>
+<h3 id="Exception-Based-solution"><a href="#Exception-Based-solution" class="headerlink" title="Exception-Based solution"></a>Exception-Based solution</h3><p>越來越多程式語言都加入當標準配備了。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">g</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (x == <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">throw</span> <span class="built_in">std</span>::exception(<span class="string">"cannot be zero in g"</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">100</span> / x + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">f</span><span class="params">(<span class="keyword">int</span> x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> v1 = g(x);</span><br><span class="line">	<span class="keyword">if</span> (v1 == <span class="number">0</span>) </span><br><span class="line">		<span class="keyword">throw</span> <span class="built_in">std</span>::exception(<span class="string">"cannot be zero in f"</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">100</span> / v1;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		f(<span class="number">0</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (<span class="built_in">std</span>::exception e) &#123;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>比起上述兩種，exception的優點<br>– 不需要特異定義一堆內部的Error Code Value，並且Code的可讀性比上面兩者都強。可以專住在Logic上的Code。<br>而缺點是：<br>– 效能問題，雖然這問題越來越不重要，不過使用Exception的方案通常比Error code慢。<br>– Boundary issue，當跨越兩個Shared library的程式碼互動食，這方案完全派不上用場。還是要走回上面的老路。</p>
+<h3 id="Railway-Oriented-Programming"><a href="#Railway-Oriented-Programming" class="headerlink" title="Railway Oriented Programming"></a>Railway Oriented Programming</h3><p>錢幾個作法都是遇到問題就往上拋，而ROP反其道而行，將錯誤往後傳，最後統一處理。<br><img src="http://fsharpforfunandprofit.com/assets/img/Recipe_Function_ErrorTrack.png" alt=""><br>這例子改用ustㄉ做示範範例 因為C++诶有ML系Language Pattern Matching和Abstract Data Type，要模擬這個不如直接換個語言寫寫看當練習。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Result</span></span> &#123;</span><br><span class="line">        Value(<span class="built_in">i32</span>),</span><br><span class="line">        Error(&amp;<span class="symbol">'static</span> <span class="built_in">str</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">div</span></span>(x: <span class="built_in">Result</span>, y: <span class="built_in">Result</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="keyword">match</span> y &#123;</span><br><span class="line">                <span class="built_in">Result</span>::Value(<span class="number">0</span>) =&gt; <span class="built_in">Result</span>::Error(<span class="string">"Cannot divide 0"</span>),</span><br><span class="line">                <span class="built_in">Result</span>::Value(y_) =&gt; &#123;</span><br><span class="line">                        <span class="keyword">match</span> x &#123;</span><br><span class="line">                                <span class="built_in">Result</span>::Value(x_) =&gt; <span class="built_in">Result</span>::Value(x_ / y_),</span><br><span class="line">                                _ =&gt; x</span><br><span class="line">                        &#125;</span><br><span class="line">                &#125;,</span><br><span class="line">                _ =&gt; y</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add1</span></span>(x: <span class="built_in">Result</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="keyword">match</span> x &#123;</span><br><span class="line">                <span class="built_in">Result</span>::Value(v) =&gt; <span class="built_in">Result</span>::Value(v + <span class="number">1</span>),</span><br><span class="line">                _ =&gt; x</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">f</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> div(<span class="built_in">Result</span>::Value(<span class="number">100</span>), add1(div(<span class="built_in">Result</span>::Value(<span class="number">100</span>), <span class="built_in">Result</span>::Value(x))));</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> value = f(<span class="number">25</span>);</span><br><span class="line">        <span class="keyword">match</span> value &#123;</span><br><span class="line">                <span class="built_in">Result</span>::Value(v) =&gt;  <span class="built_in">println!</span>(<span class="string">"The result value is &#123;&#125;"</span>, v),</span><br><span class="line">                <span class="built_in">Result</span>::Error(<span class="built_in">str</span>) =&gt; <span class="built_in">println!</span>(<span class="string">"Error happen, &#123;&#125;"</span>, <span class="built_in">str</span>)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>座個事情很簡單，如果Result是有效的值就繼續往下做，不然就直接往後傳。</p>
+<h3 id="Enhance-Monad-solution-for-Railway-Oriented-Programming"><a href="#Enhance-Monad-solution-for-Railway-Oriented-Programming" class="headerlink" title="Enhance Monad solution for Railway Oriented Programming"></a>Enhance Monad solution for Railway Oriented Programming</h3><p>網路上有很多Monad的介紹，於是東施校憑寫了一個山寨版的。關鍵在於所謂的<code>bind</code>函數，這裡就不多介紹了。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Monad</span></span> &#123;</span><br><span class="line">        <span class="function"><span class="keyword">fn</span> <span class="title">unit</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="keyword">Self</span>;</span><br><span class="line">        <span class="function"><span class="keyword">fn</span> <span class="title">bind</span></span>(&amp;<span class="keyword">self</span>, f: <span class="function"><span class="keyword">fn</span></span>(<span class="built_in">i32</span>) -&gt; <span class="keyword">Self</span>) -&gt; <span class="keyword">Self</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Result</span></span> &#123;</span><br><span class="line">        Value(<span class="built_in">i32</span>),</span><br><span class="line">        Error(&amp;<span class="symbol">'static</span> <span class="built_in">str</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">impl</span> Monad <span class="keyword">for</span> <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="function"><span class="keyword">fn</span> <span class="title">unit</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">                <span class="built_in">Result</span>::Value(x)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">fn</span> <span class="title">bind</span></span>(&amp;<span class="keyword">self</span>, f: <span class="function"><span class="keyword">fn</span></span>(<span class="built_in">i32</span>) -&gt; <span class="keyword">Self</span>) -&gt; <span class="keyword">Self</span> &#123;</span><br><span class="line">                <span class="keyword">match</span> *<span class="keyword">self</span> &#123;</span><br><span class="line">                        <span class="built_in">Result</span>::Value(x) =&gt; f(x),</span><br><span class="line">                        <span class="built_in">Result</span>::Error(<span class="built_in">str</span>) =&gt; <span class="built_in">Result</span>::Error(<span class="built_in">str</span>)</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">div100</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="keyword">match</span> x &#123;</span><br><span class="line">                <span class="number">0</span> =&gt; <span class="built_in">Result</span>::Error(<span class="string">"Cannot divide 0"</span>),</span><br><span class="line">                _ =&gt; <span class="built_in">Result</span>::Value(<span class="number">100</span> / x)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add1</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="built_in">Result</span>::Value(x + <span class="number">1</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">f</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="built_in">Result</span>::unit(x).bind(div100).bind(add1).bind(div100)</span><br><span class="line">&#125;</span><br><span class="line">~</span><br></pre></td></tr></table></figure>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p>– <a href="http://www.codeproject.com/Articles/38449/C-Exceptions-Pros-and-Cons" target="_blank" rel="noopener">C++ Exceptions: Pros and Cons</a><br>– <a href="http://fsharpforfunandprofit.com/rop/" target="_blank" rel="noopener">http://fsharpforfunandprofit.com/rop/</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/05/07/2015-05-07-type-traits-in-c-11/" rel="prev" title="Type traits in C++11">
+      <i class="fa fa-chevron-left"></i> Type traits in C++11
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/05/21/2015-05-21-how-to-pass-exception-between-threads-in-c-11/" rel="next" title="How to pass exception between threads in C++11">
+      How to pass exception between threads in C++11 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Global-state"><span class="nav-number">1.</span> <span class="nav-text">Global state</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Return-Error-and-Value-simultaneously"><span class="nav-number">2.</span> <span class="nav-text">Return Error and Value simultaneously</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Exception-Based-solution"><span class="nav-number">3.</span> <span class="nav-text">Exception-Based solution</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Railway-Oriented-Programming"><span class="nav-number">4.</span> <span class="nav-text">Railway Oriented Programming</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Enhance-Monad-solution-for-Railway-Oriented-Programming"><span class="nav-number">5.</span> <span class="nav-text">Enhance Monad solution for Railway Oriented Programming</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

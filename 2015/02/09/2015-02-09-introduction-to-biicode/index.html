@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前情提要長久以來寫C&#x2F;C++的Code時，配置環境是很麻煩的一件事，通常會遇到以下的事情  下載第三方Library 設定Include Path 設定Linking library Cross Platform的設置 Makefile的編寫  雖然有了CMake幫助解決塊平台的問題。不過還是不夠。有時我們想要Rust的Cargo或是Go Build這樣的東西，而Biicode給了我們一點光明。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Introduction to biicode">
+<meta property="og:url" content="http://yoursite.com/2015/02/09/2015-02-09-introduction-to-biicode/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="前情提要長久以來寫C&#x2F;C++的Code時，配置環境是很麻煩的一件事，通常會遇到以下的事情  下載第三方Library 設定Include Path 設定Linking library Cross Platform的設置 Makefile的編寫  雖然有了CMake幫助解決塊平台的問題。不過還是不夠。有時我們想要Rust的Cargo或是Go Build這樣的東西，而Biicode給了我們一點光明。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2015-02-09T13:17:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.623Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2015/02/09/2015-02-09-introduction-to-biicode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Introduction to biicode | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/02/09/2015-02-09-introduction-to-biicode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Introduction to biicode
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-02-09 13:17:00" itemprop="dateCreated datePublished" datetime="2015-02-09T13:17:00+00:00">2015-02-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/c/" itemprop="url" rel="index"><span itemprop="name">c++</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前情提要"><a href="#前情提要" class="headerlink" title="前情提要"></a>前情提要</h2><p>長久以來寫C/C++的Code時，配置環境是很麻煩的一件事，通常會遇到以下的事情</p>
+<ul>
+<li>下載第三方Library</li>
+<li>設定Include Path</li>
+<li>設定Linking library</li>
+<li>Cross Platform的設置</li>
+<li>Makefile的編寫</li>
+</ul>
+<p>雖然有了<a href="http://www.cmake.org/" target="_blank" rel="noopener">CMake</a>幫助解決塊平台的問題。不過還是不夠。有時我們想要Rust的<a href="https://crates.io/" target="_blank" rel="noopener">Cargo</a>或是<a href="http://golang.org/pkg/go/build/" target="_blank" rel="noopener">Go Build</a>這樣的東西，而<a href="https://www.biicode.com/" target="_blank" rel="noopener">Biicode</a>給了我們一點光明。</p>
+<a id="more"></a>
+<p>而這邊就是將<a href="http://docs.biicode.com/c++/gettingstarted.html" target="_blank" rel="noopener">教學</a>和<a href="http://learn.koding.com/guides/getting-started-biicode/" target="_blank" rel="noopener">Building C / C++ applications with biicode</a>用自己的方式表達出來。</p>
+<h3 id="Create-a-project"><a href="#Create-a-project" class="headerlink" title="Create a project"></a>Create a project</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ bii init myproject</span><br><span class="line">$ cd myproject &amp;&amp; ls</span><br><span class="line">bii  blocks  deps</span><br></pre></td></tr></table></figure>
+<p>biicode幫我們產生了三個目錄<br>接著產生一個Hello World的Template</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ bii new myuser&#x2F;crypto --hello&#x3D;cpp</span><br><span class="line">$ bii cpp:build</span><br><span class="line">INFO: Processing changes...</span><br><span class="line">Running: cmake  -G &quot;Unix Makefiles&quot; -Wno-dev  ..&#x2F;cmake</span><br><span class="line"></span><br><span class="line">		BLOCK: myuser&#x2F;crypto </span><br><span class="line">-----------------------------------------------------------</span><br><span class="line">+  LIB: myuser_crypto</span><br><span class="line">+ EXE: myuser_crypto_main</span><br><span class="line">-- Configuring done</span><br><span class="line">-- Generating done</span><br><span class="line">-- Build files have been written to: &#x2F;home&#x2F;hm&#x2F;build&#x2F;myproject&#x2F;build</span><br><span class="line">Building: cmake --build . </span><br><span class="line">Scanning dependencies of target myuser_crypto_main</span><br><span class="line">[100%] Building CXX object myuser&#x2F;crypto&#x2F;CMakeFiles&#x2F;myuser_crypto_main.dir&#x2F;main.cpp.o</span><br><span class="line">Linking CXX executable &#x2F;home&#x2F;hm&#x2F;build&#x2F;myproject&#x2F;bin&#x2F;myuser_crypto_main</span><br><span class="line">[100%] Built target myuser_crypto_main</span><br></pre></td></tr></table></figure>
+<p>可以看到最後產生的Program放在<code>bin/</code>目錄底下，於是我們可以執行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ .&#x2F;bin&#x2F;myuser_crypto_main</span><br><span class="line">Hello world!</span><br></pre></td></tr></table></figure>
+<p>到這邊沒什麼特別的，有趣的事情在後面</p>
+<h3 id="Dependency-management"><a href="#Dependency-management" class="headerlink" title="Dependency management"></a>Dependency management</h3><p>修改<code>blocks/myuser/crypto/main.cp</code>成如下，看Code我們可以猜到他需要<a href="http://www.cryptopp.com/" target="_blank" rel="noopener">Crypto++</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"cryptopp/cryptopp/sha.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"cryptopp/cryptopp/filters.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"cryptopp/cryptopp/hex.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    CryptoPP::SHA1 sha1;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> source = <span class="string">"Hello"</span>;  </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> hash = <span class="string">""</span>;</span><br><span class="line">    CryptoPP::StringSource(source, <span class="literal">true</span>, <span class="keyword">new</span> CryptoPP::HashFilter(sha1,</span><br><span class="line">                            <span class="keyword">new</span> CryptoPP::HexEncoder(<span class="keyword">new</span> CryptoPP::StringSink(hash))));</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; hash &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接著重新Build一次</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">$ bii cpp:build</span><br><span class="line">INFO: Processing changes...</span><br><span class="line">Running: cmake  -G &quot;Unix Makefiles&quot; -Wno-dev  ..&#x2F;cmake</span><br><span class="line"></span><br><span class="line">		BLOCK: myuser&#x2F;crypto </span><br><span class="line">-----------------------------------------------------------</span><br><span class="line">+  LIB: myuser_crypto</span><br><span class="line">+ EXE: myuser_crypto_main</span><br><span class="line">-- Configuring done</span><br><span class="line">-- Generating done</span><br><span class="line">-- Build files have been written to: &#x2F;home&#x2F;hm&#x2F;build&#x2F;myproject&#x2F;build</span><br><span class="line">Building: cmake --build . </span><br><span class="line">Scanning dependencies of target myuser_crypto_main</span><br><span class="line">[100%] Building CXX object myuser&#x2F;crypto&#x2F;CMakeFiles&#x2F;myuser_crypto_main.dir&#x2F;main.cpp.o</span><br><span class="line">&#x2F;home&#x2F;hm&#x2F;build&#x2F;myproject&#x2F;blocks&#x2F;myuser&#x2F;crypto&#x2F;main.cpp:1:35: fatal error: cryptopp&#x2F;cryptopp&#x2F;sha.h: No such file or directory</span><br><span class="line"> #include &quot;cryptopp&#x2F;cryptopp&#x2F;sha.h&quot;</span><br><span class="line">                                   ^</span><br><span class="line">compilation terminated.</span><br><span class="line">make[2]: *** [myuser&#x2F;crypto&#x2F;CMakeFiles&#x2F;myuser_crypto_main.dir&#x2F;main.cpp.o] Error 1</span><br><span class="line">make[1]: *** [myuser&#x2F;crypto&#x2F;CMakeFiles&#x2F;myuser_crypto_main.dir&#x2F;all] Error 2</span><br><span class="line">make: *** [all] Error 2</span><br><span class="line">ERROR: Build failed</span><br></pre></td></tr></table></figure>
+<p>正如所料，找不到對應的Header跟Library。此時我們可以使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ bii find</span><br><span class="line">INFO: Processing changes...</span><br><span class="line">INFO: Finding missing dependencies in server</span><br><span class="line">INFO: Looking for cryptopp&#x2F;cryptopp...</span><br><span class="line">INFO: &gt;&gt; Block candidate: cryptopp&#x2F;cryptopp&#x2F;cryptopp&#x2F;master</span><br><span class="line">....(略)</span><br><span class="line">INFO: Analyzing compatibility for found dependencies... </span><br><span class="line">INFO: All dependencies resolved</span><br><span class="line">Find resolved new dependencies:</span><br><span class="line">	cryptopp&#x2F;cryptopp: 8</span><br><span class="line">INFO: Downloading files from: cryptopp&#x2F;cryptopp</span><br><span class="line">INFO: Saving files from: cryptopp&#x2F;cryptopp</span><br></pre></td></tr></table></figure>
+<p>接著在一次編譯，就會得到我們想要的結果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ bii cpp:build</span><br><span class="line">$ .&#x2F;bin&#x2F;myuser_crypto_main</span><br><span class="line">F7FF9E8B7BB2E09B70935A5D785E0CC5D9D0ABF0</span><br></pre></td></tr></table></figure>
+<p>如果我們使用<code>bii deps</code>，可以到看我們需要的相依性</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">INFO: Processing changes...</span><br><span class="line">myuser&#x2F;crypto depends on:</span><br><span class="line">       cryptopp&#x2F;cryptopp: 8</span><br><span class="line">          filters.h</span><br><span class="line">          hex.h</span><br><span class="line">          sha.h</span><br><span class="line">       system:</span><br><span class="line">          iostream</span><br><span class="line">          string</span><br></pre></td></tr></table></figure>
+
+<h3 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h3><p>雖然這看起來很酷，不過還是有幾點希望改進</p>
+<ul>
+<li>Cross Compiler Toolchain</li>
+<li>Android NDK and etc</li>
+<li>More Library support<br>真期待這東西更加成熟啊</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/01/29/2015-01-29-introduce-to-llvm-c-api/" rel="prev" title="Introduce to LLVM C API ">
+      <i class="fa fa-chevron-left"></i> Introduce to LLVM C API 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/02/17/2015-02-17-10-c-tricks/" rel="next" title="10 C Tricks">
+      10 C Tricks <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前情提要"><span class="nav-number">1.</span> <span class="nav-text">前情提要</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-project"><span class="nav-number">1.1.</span> <span class="nav-text">Create a project</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dependency-management"><span class="nav-number">1.2.</span> <span class="nav-text">Dependency management</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#感想"><span class="nav-number">1.3.</span> <span class="nav-text">感想</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

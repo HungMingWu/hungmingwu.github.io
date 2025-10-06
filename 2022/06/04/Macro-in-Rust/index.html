@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="寫了一堆CC++的文章，是時候換換口味了Macro在Rust也有，不過不同於C&#x2F;C++的Texture ReplaceRust的Macro強大的不得了，順便也跟C++的template做個比較 Declarative Macros從min開始C macro版的min或是C++ templaate版的就不提供了，寫到不想寫了直接看Rust的 1234567891011121314macro_rule">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Macro in Rust">
+<meta property="og:url" content="http://yoursite.com/2022/06/04/Macro-in-Rust/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="寫了一堆CC++的文章，是時候換換口味了Macro在Rust也有，不過不同於C&#x2F;C++的Texture ReplaceRust的Macro強大的不得了，順便也跟C++的template做個比較 Declarative Macros從min開始C macro版的min或是C++ templaate版的就不提供了，寫到不想寫了直接看Rust的 1234567891011121314macro_rule">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-06-04T12:15:30.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.629Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Rust">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2022/06/04/Macro-in-Rust/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Macro in Rust | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/06/04/Macro-in-Rust/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Macro in Rust
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-06-04 12:15:30" itemprop="dateCreated datePublished" datetime="2022-06-04T12:15:30+00:00">2022-06-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>寫了一堆CC++的文章，是時候換換口味了<br>Macro在Rust也有，不過不同於C/C++的Texture Replace<br>Rust的Macro強大的不得了，順便也跟C++的template做個比較</p>
+<h3 id="Declarative-Macros"><a href="#Declarative-Macros" class="headerlink" title="Declarative Macros"></a>Declarative Macros</h3><h4 id="從min開始"><a href="#從min開始" class="headerlink" title="從min開始"></a>從min開始</h4><p>C macro版的min或是C++ templaate版的就不提供了，寫到不想寫了<br>直接看Rust的</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> min &#123;</span><br><span class="line">    ($a:ident, $b:ident) =&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> ($a &lt; $b) &#123;</span><br><span class="line">            $a</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            $b</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = <span class="number">2u32</span>;</span><br><span class="line">    <span class="keyword">let</span> b = <span class="number">3u32</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">"&#123;&#125;"</span>,  min!(a, b));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這樣看起來沒什麼特別的<br>那如果多加一個變數呢</p>
+<h4 id="min-version2"><a href="#min-version2" class="headerlink" title="min version2"></a>min version2</h4><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> min &#123;</span><br><span class="line">    ($a:ident, $b:ident) =&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> ($a &lt; $b) &#123;</span><br><span class="line">            $a</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            $b</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    ($a:ident, $b:ident, $c:ident) =&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> ($a &lt; $b) &#123;</span><br><span class="line">            <span class="keyword">if</span> ($a &lt; $c) &#123;</span><br><span class="line">                $a</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                $c</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> ($b &lt; $c) &#123;</span><br><span class="line">                $b</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                $c</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = <span class="number">3u32</span>;</span><br><span class="line">    <span class="keyword">let</span> b = <span class="number">2u32</span>;</span><br><span class="line">    <span class="keyword">let</span> c = <span class="number">1u32</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">"&#123;&#125;"</span>,  min!(a, b, c));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同樣的macro，可以有兩種不同的使用方式意<br>C語言的marco板本長這樣</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> min_2(a, b) ((a) &lt; (b)) ? (a) : (b)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> min_3(a, b, c) ((a) &lt; (b)) ? ((a) &lt; (c)) ? (a) : (c) : ((b) &lt; (c)) ? (b) : (c)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GET_MACRO(_1,_2,_3,NAME,...) NAME</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> min(...) GET_MACRO(__VA_ARGS__, min_3, min_2)(__VA_ARGS__)</span></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%d\n"</span>, <span class="built_in">min</span>(<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>));</span><br></pre></td></tr></table></figure>
+<p>看起來就是一堆亂七八糟拼湊的組合怪<br>來看看Template版</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function">T <span class="title">min</span><span class="params">(T a, T b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (a &lt; b) ? a : b;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="function">T <span class="title">min</span><span class="params">(T a, T b, T c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (a &lt; b) ? (a &lt; c) ? a : c : (b &lt; c) ? b : c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>憑藉於Function overloading，可讀性高很多，唯一比較麻煩的是要寫兩次template function declaration</p>
+<h4 id="min-version3"><a href="#min-version3" class="headerlink" title="min version3"></a>min version3</h4><p>來個varadic個版本，先寫個看起來沒問題，實際上編譯不過的</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> min &#123;</span><br><span class="line">    ($a:ident) =&gt; &#123; $a &#125;;</span><br><span class="line">    ($a:ident, $($b:ident),+) =&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> minV = min!($($b),+)</span><br><span class="line">        <span class="keyword">if</span> ($a &lt; minV) &#123;</span><br><span class="line">            $a</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            minV</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>後來發現Rust Macro裡面不能有local variable，只能改成這樣</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> min &#123;</span><br><span class="line">    ($a:ident) =&gt; &#123; $a &#125;;</span><br><span class="line">    ($a:ident, $($b:ident),+) =&gt; &#123;</span><br><span class="line">        std::cmp::min($a, min!($($b),+))</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>之後又發現一點和C/C++ preprocessor不同的地方，由於他是直接對AST做操作，所以得到的Token要自己Parse<br>所以做個實驗，參數之間分隔用<code>;</code>取代<code>,</code>，這樣是合法的</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> min &#123;</span><br><span class="line">    ($a:ident) =&gt; &#123; $a &#125;;</span><br><span class="line">    ($a:ident; $($b:ident);+) =&gt; &#123;</span><br><span class="line">        std::cmp::min($a, min!($($b);+))</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = <span class="number">3u32</span>;</span><br><span class="line">    <span class="keyword">let</span> b = <span class="number">2u32</span>;</span><br><span class="line">    <span class="keyword">let</span> c = <span class="number">1u32</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">"&#123;&#125;"</span>,  min!(a; b; c));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>不過沒辦法用local variable有點可惜，<br>Marco版的，我寫不出來，直接看Variadic Template的版本</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span>... Args&gt;</span><br><span class="line"><span class="function">T <span class="title">min</span><span class="params">(<span class="keyword">const</span> T&amp; first, <span class="keyword">const</span> Args&amp;... args)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(<span class="keyword">sizeof</span>...(Args) == <span class="number">0</span>)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> first;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">const</span> <span class="keyword">auto</span> minV = min(args...);</span><br><span class="line">                <span class="keyword">return</span> (first &lt; minV) ? first : minV;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以做更多的變化，不過Variadic Template最大的問題是我永遠記不住<code>...</code>到底要放哪這件事`<br>不過Rust真正厲害的是第二種Macro</p>
+<h3 id="Procedural-Macros"><a href="#Procedural-Macros" class="headerlink" title="Procedural Macros"></a>Procedural Macros</h3><p>基本上就是把輸入的<code>TokenStream</code>轉成另外的<code>TokenStream</code>的流程</p>
+<p>分成三種</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ cargo new macro-demo --lib</span><br></pre></td></tr></table></figure>
+<p>在<code>Cargo.toml</code>新增以下兩行</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[lib]</span></span><br><span class="line"><span class="attr">proc-macro</span> = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h4 id="Attribute-macros"><a href="#Attribute-macros" class="headerlink" title="Attribute macros"></a>Attribute macros</h4><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[proc_macro_attribute]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">sorted</span></span>(args: TokenStream, input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    <span class="keyword">let</span> _ = args;</span><br><span class="line">    <span class="keyword">let</span> _ = input;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">unimplemented!</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>How to use atribute macro</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[sorted]</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Letter</span></span> &#123;</span><br><span class="line">    A,</span><br><span class="line">    B,</span><br><span class="line">    C,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Function-like-procedural-macros"><a href="#Function-like-procedural-macros" class="headerlink" title="Function-like procedural macros"></a>Function-like procedural macros</h4><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[proc_macro]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">seq</span></span>(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    <span class="keyword">let</span> _ = input;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">unimplemented!</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>How to use function-like macro</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">seq! &#123; n <span class="keyword">in</span> <span class="number">0</span>..<span class="number">10</span> &#123;</span><br><span class="line">    <span class="comment">/* ... */</span></span><br><span class="line">&#125;&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Derive-macro-helper-attributes"><a href="#Derive-macro-helper-attributes" class="headerlink" title="Derive macro helper attributes"></a>Derive macro helper attributes</h4><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[proc_macro_derive(Builder)]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">derive_builder</span></span>(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    <span class="keyword">let</span> _ = input;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">unimplemented!</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>How to use derived macro</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Builder)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Command</span></span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="Caution"><a href="#Caution" class="headerlink" title="Caution"></a>Caution</h4><p><code>Procedural Macros</code>不同於<code>Declarative Macros</code>，必須單獨是一個crate存在，目前IDE對Proc Macro的支持度不好，連Debug Proc Macro也很麻煩，最常使用的還是print大法</p>
+<h4 id="Simple-example"><a href="#Simple-example" class="headerlink" title="Simple  example"></a>Simple  example</h4><p>從別人的範例中學來的，這邊實作一個<code>Attribute macros</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir rust_proc_macro_demo &amp;&amp; <span class="built_in">cd</span> rust_proc_macro_demo</span><br><span class="line">$ mkdir rust_proc_macro_guide &amp;&amp; <span class="built_in">cd</span> rust_proc_macro_guide</span><br><span class="line">$ cargo init --bin</span><br><span class="line">$ <span class="built_in">cd</span> ..</span><br><span class="line">$ mkdir proc_macro_define_crate &amp;&amp; <span class="built_in">cd</span> proc_macro_define_crate</span><br><span class="line">$ cargo init --lib</span><br><span class="line">$ <span class="built_in">cd</span> ..</span><br></pre></td></tr></table></figure>
+<p>修改<code>proc_macro_define_crate/Cargo.toml</code><br>加入</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[lib]</span></span><br><span class="line"><span class="attr">proc-macro</span> = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="section">[dependencies]</span></span><br><span class="line"><span class="attr">quote</span> = <span class="string">"1"</span></span><br><span class="line"><span class="attr">syn</span> = &#123;features=[<span class="string">"full"</span>,<span class="string">"extra-traits"</span>]&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接著修改<code>rust_proc_macro_guide/Cargo.toml</code></p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[dependencies]</span></span><br><span class="line"><span class="attr">proc_macro_define_crate</span> = &#123;path=<span class="string">"../proc_macro_define_crate"</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>置換掉<code>proc_macro_define_crate/src/lib.rs</code>裡面的內容</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> proc_macro::TokenStream;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[proc_macro_attribute]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">mytest_proc_macro</span></span>(attr: TokenStream, item: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    eprintln!(<span class="string">"Attr &#123;:#?&#125;"</span>, attr);</span><br><span class="line">    eprintln!(<span class="string">"Item &#123;:#?&#125;"</span>, item);</span><br><span class="line">    item</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一樣將<code>rust_proc_macro_guide/src/main.rs</code>內部的內容換掉</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> proc_macro_define_crate::mytest_proc_macro;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[mytest_proc_macro(HungMingWu)]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>(a:<span class="built_in">i32</span>)&#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">"hello world"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接著用<code>cargo check</code>檢查</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> rust_proc_macro_guide/</span><br><span class="line">$ cargo check</span><br></pre></td></tr></table></figure>
+<p>可以看到類似這樣的輸出</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">Attr TokenStream [</span><br><span class="line">    Ident &#123;</span><br><span class="line">        ident: &quot;HungMingWu&quot;,</span><br><span class="line">        span: #0 bytes(69..79),</span><br><span class="line">    &#125;,</span><br><span class="line">]</span><br><span class="line">Item TokenStream [</span><br><span class="line">    Ident &#123;</span><br><span class="line">        ident: &quot;fn&quot;,</span><br><span class="line">        span: #0 bytes(82..84),</span><br><span class="line">    &#125;,</span><br><span class="line">    Ident &#123;</span><br><span class="line">        ident: &quot;foo&quot;,</span><br><span class="line">        span: #0 bytes(85..88),</span><br><span class="line">    &#125;,</span><br><span class="line">    Group &#123;</span><br><span class="line">        delimiter: Parenthesis,</span><br><span class="line">        stream: TokenStream [</span><br><span class="line">            Ident &#123;</span><br><span class="line">                ident: &quot;a&quot;,</span><br><span class="line">                span: #0 bytes(89..90),</span><br><span class="line">            &#125;,</span><br><span class="line">            Punct &#123;</span><br><span class="line">                ch: &#39;:&#39;,</span><br><span class="line">                spacing: Alone,</span><br><span class="line">                span: #0 bytes(90..91),</span><br><span class="line">            &#125;,</span><br><span class="line">            Ident &#123;</span><br><span class="line">                ident: &quot;i32&quot;,</span><br><span class="line">                span: #0 bytes(91..94),</span><br><span class="line">            &#125;,</span><br><span class="line">        ],</span><br><span class="line">        span: #0 bytes(88..95),</span><br><span class="line">    &#125;,</span><br><span class="line">    Group &#123;</span><br><span class="line">        delimiter: Brace,</span><br><span class="line">        stream: TokenStream [</span><br><span class="line">            Ident &#123;</span><br><span class="line">                ident: &quot;println&quot;,</span><br><span class="line">                span: #0 bytes(101..108),</span><br><span class="line">            &#125;,</span><br><span class="line">            Punct &#123;</span><br><span class="line">                ch: &#39;!&#39;,</span><br><span class="line">                spacing: Alone,</span><br><span class="line">                span: #0 bytes(108..109),</span><br><span class="line">            &#125;,</span><br><span class="line">            Group &#123;</span><br><span class="line">                delimiter: Parenthesis,</span><br><span class="line">                stream: TokenStream [</span><br><span class="line">                    Literal &#123;</span><br><span class="line">                        kind: Str,</span><br><span class="line">                        symbol: &quot;hello world&quot;,</span><br><span class="line">                        suffix: None,</span><br><span class="line">                        span: #0 bytes(110..123),</span><br><span class="line">                    &#125;,</span><br><span class="line">                ],</span><br><span class="line">                span: #0 bytes(109..124),</span><br><span class="line">            &#125;,</span><br><span class="line">            Punct &#123;</span><br><span class="line">                ch: &#39;;&#39;,</span><br><span class="line">                spacing: Alone,</span><br><span class="line">                span: #0 bytes(124..125),</span><br><span class="line">            &#125;,</span><br><span class="line">        ],</span><br><span class="line">        span: #0 bytes(95..127),</span><br><span class="line">    &#125;,</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>這樣我們就能看出Attr和Item分別對應的TokenStream了</p>
+<h4 id="From-TokenStream-to-Syntax-Tree"><a href="#From-TokenStream-to-Syntax-Tree" class="headerlink" title="From TokenStream to Syntax Tree"></a>From TokenStream to Syntax Tree</h4><p>有些時候，光看Lexer的TokenStream無助於解決問題，我們需要Syntax Tree<br>因此我們修改<code>mytest_proc_macro</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> proc_macro::TokenStream;</span><br><span class="line"><span class="keyword">use</span> syn::&#123;parse_macro_input, AttributeArgs, Item&#125;;</span><br><span class="line"><span class="keyword">use</span> quote::quote;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[proc_macro_attribute]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">mytest_proc_macro</span></span>(attr: TokenStream, item: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    eprintln!(<span class="string">"Attr &#123;:#?&#125;"</span>, parse_macro_input!(attr <span class="keyword">as</span> AttributeArgs));</span><br><span class="line">    <span class="keyword">let</span> body_ast = parse_macro_input!(item <span class="keyword">as</span> Item);</span><br><span class="line">    eprintln!(<span class="string">"Item &#123;:#?&#125;"</span>, body_ast);</span><br><span class="line">    quote!(#body_ast).into()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>會跑出這樣的結果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br></pre></td><td class="code"><pre><span class="line">Attr [</span><br><span class="line">    Meta(</span><br><span class="line">        Path(</span><br><span class="line">            Path &#123;</span><br><span class="line">                leading_colon: None,</span><br><span class="line">                segments: [</span><br><span class="line">                    PathSegment &#123;</span><br><span class="line">                        ident: Ident &#123;</span><br><span class="line">                            ident: &quot;HungMingWu&quot;,</span><br><span class="line">                            span: #0 bytes(69..79),</span><br><span class="line">                        &#125;,</span><br><span class="line">                        arguments: None,</span><br><span class="line">                    &#125;,</span><br><span class="line">                ],</span><br><span class="line">            &#125;,</span><br><span class="line">        ),</span><br><span class="line">    ),</span><br><span class="line">]</span><br><span class="line">Item Fn(</span><br><span class="line">    ItemFn &#123;</span><br><span class="line">        attrs: [],</span><br><span class="line">        vis: Inherited,</span><br><span class="line">        sig: Signature &#123;</span><br><span class="line">            constness: None,</span><br><span class="line">            asyncness: None,</span><br><span class="line">            unsafety: None,</span><br><span class="line">            abi: None,</span><br><span class="line">            fn_token: Fn,</span><br><span class="line">            ident: Ident &#123;</span><br><span class="line">                ident: &quot;foo&quot;,</span><br><span class="line">                span: #0 bytes(85..88),</span><br><span class="line">            &#125;,</span><br><span class="line">            generics: Generics &#123;</span><br><span class="line">                lt_token: None,</span><br><span class="line">                params: [],</span><br><span class="line">                gt_token: None,</span><br><span class="line">                where_clause: None,</span><br><span class="line">            &#125;,</span><br><span class="line">            paren_token: Paren,</span><br><span class="line">            inputs: [</span><br><span class="line">                Typed(</span><br><span class="line">                    PatType &#123;</span><br><span class="line">                        attrs: [],</span><br><span class="line">                        pat: Ident(</span><br><span class="line">                            PatIdent &#123;</span><br><span class="line">                                attrs: [],</span><br><span class="line">                                by_ref: None,</span><br><span class="line">                                mutability: None,</span><br><span class="line">                                ident: Ident &#123;</span><br><span class="line">                                    ident: &quot;a&quot;,</span><br><span class="line">                                    span: #0 bytes(89..90),</span><br><span class="line">                                &#125;,</span><br><span class="line">                                subpat: None,</span><br><span class="line">                            &#125;,</span><br><span class="line">                        ),</span><br><span class="line">                        colon_token: Colon,</span><br><span class="line">                        ty: Path(</span><br><span class="line">                            TypePath &#123;</span><br><span class="line">                                qself: None,</span><br><span class="line">                                path: Path &#123;</span><br><span class="line">                                    leading_colon: None,</span><br><span class="line">                                    segments: [</span><br><span class="line">                                        PathSegment &#123;</span><br><span class="line">                                            ident: Ident &#123;</span><br><span class="line">                                                ident: &quot;i32&quot;,</span><br><span class="line">                                                span: #0 bytes(91..94),</span><br><span class="line">                                            &#125;,</span><br><span class="line">                                            arguments: None,</span><br><span class="line">                                        &#125;,</span><br><span class="line">                                    ],</span><br><span class="line">                                &#125;,</span><br><span class="line">                            &#125;,</span><br><span class="line">                        ),</span><br><span class="line">                    &#125;,</span><br><span class="line">                ),</span><br><span class="line">            ],</span><br><span class="line">            variadic: None,</span><br><span class="line">            output: Default,</span><br><span class="line">        &#125;,</span><br><span class="line">        block: Block &#123;</span><br><span class="line">            brace_token: Brace,</span><br><span class="line">            stmts: [</span><br><span class="line">                Semi(</span><br><span class="line">                    Macro(</span><br><span class="line">                        ExprMacro &#123;</span><br><span class="line">                            attrs: [],</span><br><span class="line">                            mac: Macro &#123;</span><br><span class="line">                                path: Path &#123;</span><br><span class="line">                                    leading_colon: None,</span><br><span class="line">                                    segments: [</span><br><span class="line">                                        PathSegment &#123;</span><br><span class="line">                                            ident: Ident &#123;</span><br><span class="line">                                                ident: &quot;println&quot;,</span><br><span class="line">                                                span: #0 bytes(101..108),</span><br><span class="line">                                            &#125;,</span><br><span class="line">                                            arguments: None,</span><br><span class="line">                                        &#125;,</span><br><span class="line">                                    ],</span><br><span class="line">                                &#125;,</span><br><span class="line">                                bang_token: Bang,</span><br><span class="line">                                delimiter: Paren(</span><br><span class="line">                                    Paren,</span><br><span class="line">                                ),</span><br><span class="line">                                tokens: TokenStream [</span><br><span class="line">                                    Literal &#123;</span><br><span class="line">                                        kind: Str,</span><br><span class="line">                                        symbol: &quot;hello world&quot;,</span><br><span class="line">                                        suffix: None,</span><br><span class="line">                                        span: #0 bytes(110..123),</span><br><span class="line">                                    &#125;,</span><br><span class="line">                                ],</span><br><span class="line">                            &#125;,</span><br><span class="line">                        &#125;,</span><br><span class="line">                    ),</span><br><span class="line">                    Semi,</span><br><span class="line">                ),</span><br><span class="line">            ],</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h4 id="Comparsion-with-C-C"><a href="#Comparsion-with-C-C" class="headerlink" title="Comparsion with C/C++"></a>Comparsion with C/C++</h4><p>要達到類似的功能，除了X-Macros之外，我想不到類似的方法了<br>不過X-Marcos不僅醜，功能還有限，Debug更困難</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p>–  <a href="https://zhuanlan.zhihu.com/p/106016118" target="_blank" rel="noopener">Rust Macro 手册</a><br>– <a href="http://blog.hubwiz.com/2020/01/30/rust-macro/" target="_blank" rel="noopener">Rust宏编程新手指南【Macro】</a><br>– <a href="https://www.kilerd.me/rust-proc-macro-101/" target="_blank" rel="noopener">Rust 过程宏 101</a><br>– <a href="https://veykril.github.io/tlborm/introduction.html#the-little-book-of-rust-macros" target="_blank" rel="noopener">The Little Book of Rust Macros</a><br>– <a href="https://github.com/dtolnay/proc-macro-workshop/" target="_blank" rel="noopener">Rust Latam: procedural macros workshop</a><br>– <a href="https://blog.logrocket.com/macros-in-rust-a-tutorial-with-examples/" target="_blank" rel="noopener">Macros in Rust: A tutorial with examples - LogRocket Blog</a><br>– <a href="https://stackoverflow.com/questions/11761703/overloading-macro-on-number-of-arguments" target="_blank" rel="noopener">Overloading Macro on Number of Arguments</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Rust/" rel="tag"># Rust</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/02/27/ScopeExit-and-Higher-Order-Function-in-C/" rel="prev" title="ScopeExit and Higher Order Function in C++">
+      <i class="fa fa-chevron-left"></i> ScopeExit and Higher Order Function in C++
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/08/06/Customization-Point-Object-tag-invoke-and-future/" rel="next" title="Customization Point Object, tag_invoke and future">
+      Customization Point Object, tag_invoke and future <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Declarative-Macros"><span class="nav-number">1.</span> <span class="nav-text">Declarative Macros</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#從min開始"><span class="nav-number">1.1.</span> <span class="nav-text">從min開始</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#min-version2"><span class="nav-number">1.2.</span> <span class="nav-text">min version2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#min-version3"><span class="nav-number">1.3.</span> <span class="nav-text">min version3</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Procedural-Macros"><span class="nav-number">2.</span> <span class="nav-text">Procedural Macros</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Attribute-macros"><span class="nav-number">2.1.</span> <span class="nav-text">Attribute macros</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Function-like-procedural-macros"><span class="nav-number">2.2.</span> <span class="nav-text">Function-like procedural macros</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Derive-macro-helper-attributes"><span class="nav-number">2.3.</span> <span class="nav-text">Derive macro helper attributes</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Caution"><span class="nav-number">2.4.</span> <span class="nav-text">Caution</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Simple-example"><span class="nav-number">2.5.</span> <span class="nav-text">Simple  example</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#From-TokenStream-to-Syntax-Tree"><span class="nav-number">2.6.</span> <span class="nav-text">From TokenStream to Syntax Tree</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Comparsion-with-C-C"><span class="nav-number">2.7.</span> <span class="nav-text">Comparsion with C&#x2F;C++</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">3.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

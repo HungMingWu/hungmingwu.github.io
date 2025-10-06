@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="之前遇到一個使用情況，在unique_ptr已經存在於STL Container當中，想要把他從Container移除且回傳出被分離的unique_ptr，該怎麼做。 Original idea原來的想法很簡單，沒考慮太多 12345678910111213141516171819202122232425#include &lt;memory&gt;#include &lt;vector&gt;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Transfer unique_ptr ownership from STL container">
+<meta property="og:url" content="http://yoursite.com/2014/09/28/2014-09-28-transfer-unique-ptr-ownership-from-stl-container/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="之前遇到一個使用情況，在unique_ptr已經存在於STL Container當中，想要把他從Container移除且回傳出被分離的unique_ptr，該怎麼做。 Original idea原來的想法很簡單，沒考慮太多 12345678910111213141516171819202122232425#include &lt;memory&gt;#include &lt;vector&gt;#">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2014-09-28T14:11:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.622Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2014/09/28/2014-09-28-transfer-unique-ptr-ownership-from-stl-container/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Transfer unique_ptr ownership from STL container | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2014/09/28/2014-09-28-transfer-unique-ptr-ownership-from-stl-container/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Transfer unique_ptr ownership from STL container
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2014-09-28 14:11:00" itemprop="dateCreated datePublished" datetime="2014-09-28T14:11:00+00:00">2014-09-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/" itemprop="url" rel="index"><span itemprop="name">c++</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/C-11/" itemprop="url" rel="index"><span itemprop="name">C++11</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>之前遇到一個使用情況，在unique_ptr<strong>已經存在</strong>於STL Container當中，想要把他從Container移除且回傳出被分離的unique_ptr，該怎麼做。</p>
+<h2 id="Original-idea"><a href="#Original-idea" class="headerlink" title="Original idea"></a>Original idea</h2><p>原來的想法很簡單，沒考慮太多</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;memory&gt;</span><br><span class="line">#include &lt;vector&gt;</span><br><span class="line">#include &lt;algorithm&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line">template&lt;typename Func&gt;</span><br><span class="line">unique_ptr&lt;int&gt; RemoveFromContainer(vector&lt;unique_ptr&lt;int&gt;&gt; &amp;c, Func pred) &#123;</span><br><span class="line">	auto it &#x3D; find_if(begin(c), end(c), pred);</span><br><span class="line">	unique_ptr&lt;int&gt; ret &#x3D; move(*it);</span><br><span class="line">	c.erase(it);</span><br><span class="line">	return ret;</span><br><span class="line">&#125;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	vector&lt;unique_ptr&lt;int&gt;&gt; vec;</span><br><span class="line">	vec.push_back(make_unique&lt;int&gt;(1));</span><br><span class="line">	vec.push_back(make_unique&lt;int&gt;(2));</span><br><span class="line">	vec.push_back(make_unique&lt;int&gt;(3));</span><br><span class="line">	unique_ptr&lt;int&gt; ret &#x3D; RemoveFromContainer(vec, [](const unique_ptr&lt;int&gt; &amp;elem) &#123;</span><br><span class="line">		return *elem &#x3D;&#x3D; 2;</span><br><span class="line">	&#125;);</span><br><span class="line">	if (ret) cout &lt;&lt; *ret &lt;&lt; endl;</span><br><span class="line">	for (auto &amp;elem : vec)</span><br><span class="line">		cout &lt;&lt; *elem &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意要將unique_ptr從Container移出來需要用move，然後才能將其刪除。</p>
+<a id="more"></a>
+<h2 id="More-Generic"><a href="#More-Generic" class="headerlink" title="More Generic"></a>More Generic</h2><p>為了讓這個函數更Generic，做了一點嘗試</p>
+<h3 id="用-auto-decltype來作回傳質推導"><a href="#用-auto-decltype來作回傳質推導" class="headerlink" title="用 auto / decltype來作回傳質推導"></a>用 auto / decltype來作回傳質推導</h3><p>傳進來的參數不在是<code>vector&lt;unique_ptr&lt;int&gt;&gt;</code>了，直接讓編譯器去推導<br>然後寫了以下的Code</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">auto RemoveFromContainer(Cond &amp;c, Func pred) -&gt; decltype(move(*begin(c))) &#123;</span><br><span class="line">	auto it &#x3D; find_if(begin(c), end(c), pred);</span><br><span class="line">	auto ret &#x3D; move(*it);</span><br><span class="line">	c.erase(it);</span><br><span class="line">	return move(ret);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>悲劇發生了，原本該印出來的2不見了。而資料也被從Container咦除了。<br>原因是在於我們回傳型態不對。<br>一開始的版本，我們是回傳一個<code>Value Semantics: unique_ptr&lt;T&gt;</code>。<br>而這個版本加上<code>move</code>之後，就變成了 <code>unique_ptr&lt;T&gt;&amp;&amp;</code>。<br>由於錯誤的回傳型態，然後這個unique_ptr就佚失了。更盛著程式直接Crash。</p>
+<h3 id="改良版"><a href="#改良版" class="headerlink" title="改良版"></a>改良版</h3><p>試了半天之後發現這樣可以用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">template &lt;typename Cond, typename Func&gt;</span><br><span class="line">typename Cond::value_type RemoveFromContainer(Cond &amp;c, Func pred) &#123;</span><br><span class="line">	auto it &#x3D; find_if(begin(c), end(c), pred);</span><br><span class="line">	auto ret &#x3D; move(*it);</span><br><span class="line">	c.erase(it);</span><br><span class="line">	return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因為STL container有value_type紀錄當前value的type，所以剛好可以使用。<br>也許有更好得方法，有時間再來研究。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2014/09/20/2014-09-20-comparsion-between-rust-trait-go-interface-c/" rel="prev" title="Comparsion between rust trait / go interface / C++">
+      <i class="fa fa-chevron-left"></i> Comparsion between rust trait / go interface / C++
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2014/10/04/2014-10-04-link-time-optimization-for-c-c/" rel="next" title="Link time optimization for C/C++">
+      Link time optimization for C/C++ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Original-idea"><span class="nav-number">1.</span> <span class="nav-text">Original idea</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#More-Generic"><span class="nav-number">2.</span> <span class="nav-text">More Generic</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#用-auto-decltype來作回傳質推導"><span class="nav-number">2.1.</span> <span class="nav-text">用 auto &#x2F; decltype來作回傳質推導</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#改良版"><span class="nav-number">2.2.</span> <span class="nav-text">改良版</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

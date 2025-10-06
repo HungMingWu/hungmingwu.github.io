@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="其實是看了The C++ Memory Model之後，對於之前懵懂的點有點茅塞頓開，寫下來記錄。 Pre-C&#x2F;C++11先來看以下這段Code 123456789101112int count &#x3D; 0;bool flag &#x3D; false;void thread1()&amp;#123;	count &#x3D; 1;  &#x2F;&#x2F; (1)	flag &#x3D; true; &#x2F;&#x2F; (2)&amp;#125;void thread2()&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Memory Model for C&#x2F;C++11">
+<meta property="og:url" content="http://yoursite.com/2015/01/17/2015-01-17-memory-model-for-c-cpp-11/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="其實是看了The C++ Memory Model之後，對於之前懵懂的點有點茅塞頓開，寫下來記錄。 Pre-C&#x2F;C++11先來看以下這段Code 123456789101112int count &#x3D; 0;bool flag &#x3D; false;void thread1()&amp;#123;	count &#x3D; 1;  &#x2F;&#x2F; (1)	flag &#x3D; true; &#x2F;&#x2F; (2)&amp;#125;void thread2()&amp;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2015-01-17T02:30:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.622Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2015/01/17/2015-01-17-memory-model-for-c-cpp-11/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Memory Model for C/C++11 | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/01/17/2015-01-17-memory-model-for-c-cpp-11/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Memory Model for C/C++11
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-01-17 02:30:00" itemprop="dateCreated datePublished" datetime="2015-01-17T02:30:00+00:00">2015-01-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C11/" itemprop="url" rel="index"><span itemprop="name">C11</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C11/C-11/" itemprop="url" rel="index"><span itemprop="name">C++11</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>其實是看了<code>The C++ Memory Model</code>之後，對於之前懵懂的點有點茅塞頓開，寫下來記錄。</p>
+<h2 id="Pre-C-C-11"><a href="#Pre-C-C-11" class="headerlink" title="Pre-C/C++11"></a>Pre-C/C++11</h2><p>先來看以下這段Code</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">bool</span> flag = <span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	count = <span class="number">1</span>;  <span class="comment">// (1)</span></span><br><span class="line">	flag = <span class="literal">true</span>; <span class="comment">// (2)</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">while</span>(!flag);</span><br><span class="line">	r0 = count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>就直覺上來說，r0拿到的值會是1，而事實往往不會這麼簡單。Compiler有可能把(1)和(2)的指令重排，因為對Single thread來說，如此重排不匯兌結果產生任何影響，如果我們就算強迫Compiler禁止指令重排，<strong>CPU也會有機會做這件事</strong>。</p>
+<a id="more"></a>
+<p>由於Java之前就遇過這樣的問題，因此在這方面的工作已經十分完善，所以C++直接借鑒其努力，推出了<code>atomics</code> Library和新的Memory Model。<br>先定義幾個名詞</p>
+<ul>
+<li>Sequential Consistency</li>
+</ul>
+<blockquote>
+<ol>
+<li>the operations of all threads are executed in some sequential order</li>
+<li>the operations of each thread appear in this sequence in the order specified by their program</li>
+</ol>
+</blockquote>
+<p>用Code來解釋上面的情形</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> x = y = <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	x = <span class="number">1</span>;</span><br><span class="line">	r1 = y;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	y = <span class="number">1</span>;</span><br><span class="line">	r2 = x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>關於上述第一點，每個Thread執行的順序就是Program order。所以<code>x = 1</code>就是會在<code>r1 = y</code>之前執行，而<code>y = 1</code>亦會在<code>r2 = x</code>執行。關於第二點比較難以理解，每個Thread執行順序可以是任意的，不過以Total Sequence看來，每個Thread看到的情況是一樣的。<br>如上面的Code有幾種Execution posiible</p>
+<ul>
+<li><p><code>x = 1</code> -&gt; <code>r1 = y</code> -&gt; <code>y = 1</code> -&gt; <code>r2 = x</code>  r1 = 0, r2 = 1</p>
+</li>
+<li><p><code>y = 1</code> -&gt; <code>r2 = s</code> -&gt; <code>x = 1</code> -&gt; <code>r1 = y</code>  r1 = 1, r2 = 0</p>
+</li>
+<li><p><code>x = 1</code> -&gt; <code>y = 1</code> -&gt; <code>r1 = y</code> -&gt; <code>r2 = x</code> r1 = 1, r2 = 1</p>
+</li>
+</ul>
+<p>酸然這不代表所有可能的執行順遜，不過一旦執行順序確定，每個Thread看到的執行順序都是相同的。而每個各自的Thread獨自的執行順序是有序的。因此保證沒有Data race的可能性。<br>因此C++11藉由此定義了<a href="http://www.hboehm.info/c++mm/sc_proof.html" target="_blank" rel="noopener">A Memory Model for C++: Sequential Consistency for Race-Free Programs</a>而這是最簡單的</p>
+<h2 id="Synchronize"><a href="#Synchronize" class="headerlink" title="Synchronize"></a>Synchronize</h2><p>在C++有訂定某些operation具有<code>synchronizing</code>的特質，例如</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	X();</span><br><span class="line">	A();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	B();</span><br><span class="line">	Y();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>若A()和B()之間有<code>synchronizes with</code>關係的話，那麼X() <code>happen before</code> Y()<br>以最容易理解的Lock來當範例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::mutex mtx;</span><br><span class="line"><span class="keyword">bool</span> bDataReady = <span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	mtx.lock();</span><br><span class="line">	PrepareData();</span><br><span class="line">	bDataReady = <span class="literal">true</span>;</span><br><span class="line">	mtx.unlock();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	mtx.lock();</span><br><span class="line">	<span class="keyword">if</span> (bDataReady) &#123;</span><br><span class="line">		ConsumeData();</span><br><span class="line">	&#125;</span><br><span class="line">	mtx.unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根據Mutex所提供的synchronization</p>
+<blockquote>
+<p>Mutex provides inter-thread synchronization:<br>unlock() synchronizes with calls to<br>lock() on the same mutex object.</p>
+</blockquote>
+<p>以這個範例來看的話，PrepareData() <code>happen before</code> ConsumeData()，。所以可以拿到希望的資料。<br>由於Mutex有時候有點殺雞用牛刀的感覺，因此有更輕量的<code>std::atomic</code>來提供<strong>大部分</strong>的synchronizes with語意。</p>
+<h2 id="Atomic"><a href="#Atomic" class="headerlink" title="Atomic"></a>Atomic</h2><p>對於Atomic的Memory Model又分三種</p>
+<h3 id="sequentially-consistent"><a href="#sequentially-consistent" class="headerlink" title="sequentially consistent"></a>sequentially consistent</h3><p>如同上面說的那些一樣，也是atomic的預設Memory model，不多說了。</p>
+<h3 id="relaxed"><a href="#relaxed" class="headerlink" title="relaxed"></a>relaxed</h3><p>關於Relaxed model的描述</p>
+<blockquote>
+<p>Each memory location has a total modification order(however, this order cannot be observed directly)</p>
+<p>Memory operations performed by the same thread on the same memory location are not reordered with respect to the modification order.</p>
+</blockquote>
+<p>每個記憶體位根據時間有一定性的修改順序。因此一個記憶體內的值根據時間軸來表示的話，可能是<br><code>v0 -&gt; v1 -&gt; v2 -&gt; v3 -&gt; v4 -&gt; ..... -&gt; vn</code><br>而在同一個Thread，他的Memory order不能被修改，因此在這個Thread看到的可能是<br><code>v0 -&gt; v2 -&gt; v3 -&gt; vn</code> ，或者是 <code>v1 -&gt; v2 -&gt; v3</code>，絕不可能是 <code>v1 -&gt; v0 -&gt; v2</code>這種情形<br><strong>不過不同Thread的順序不受此限制</strong>，因此當某個Thread已經從<code>v0-&gt;v1-&gt;v2</code>時，另外一個Thread允許看到<code>v0</code>的存在。<br>因此下面這段Code就會有問題</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; f=<span class="literal">false</span>;</span><br><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; g=<span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	f.store(<span class="literal">true</span>, memory_order_relaxed);</span><br><span class="line">	g.store(<span class="literal">true</span>, memory_order_relaxed);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">while</span>(!g.load(memory_order_relaxed));</span><br><span class="line">	assert(f.load(memory_order_relaxed));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上麵的例子來說，雖然Thread1已經將f從<code>flast-&gt;true</code>了，不過thread2的f允許讀到<code>false</code>，所以assert可能匯出錯。<br>所以relaxed model只是核當Atomic operation，例如Counter，不是合作Thread間的同步。為了解決這問題，引進了Acquire-Release model</p>
+<h3 id="Acquire-Release-Consume-Release"><a href="#Acquire-Release-Consume-Release" class="headerlink" title="Acquire-Release (Consume-Release)"></a>Acquire-Release (Consume-Release)</h3><p>Consume-Release是Acquire-Release的弱化版，這邊就不提了。來看Acquire-Release的定義</p>
+<blockquote>
+<p> a store-release operation synchronizes with all load-acquire operations reading the stored value.</p>
+<p>All Operations in the releasing thread preceding the store-release happen before all operations following the load-acquire in the acquiring thread.</p>
+</blockquote>
+<p>以下的程式碼因此獲得保證</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> n;</span><br><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; g=<span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	n = <span class="number">23</span>;</span><br><span class="line">	g.store(<span class="literal">true</span>, memory_order_relaxed);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">while</span>(!g.load(memory_order_relaxed));</span><br><span class="line">	assert(n == <span class="number">23</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在這邊我們就不需要用atomic來保護n了。</p>
+<h3 id="Dekker’s-algorithm-revisited"><a href="#Dekker’s-algorithm-revisited" class="headerlink" title="Dekker’s algorithm revisited"></a>Dekker’s algorithm revisited</h3><p>雖然Acquire-Release可以解決大部分的問題，不過還是有例外的，例如</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; f1=<span class="literal">false</span>;</span><br><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; f2=<span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	f1.store(<span class="literal">true</span>, memory_order_release);</span><br><span class="line">	<span class="keyword">if</span> (!f2.load(memory_order_acquire)) &#123;</span><br><span class="line">  	<span class="comment">// critical section</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	f2.store(<span class="literal">true</span>, memory_order_release);</span><br><span class="line">	<span class="keyword">if</span> (!f1.load(memory_order_acquire)) &#123;</span><br><span class="line">  	<span class="comment">// critical section</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由於f1跟f2不屬於同一個Memory location，因此load的operation有可能被compiler或是cpu提前至store之前，於是兩個Thread都有可能同時進入 critical section，這部是我們想要的，因此只能回到SC Model。正確的程式馬廄只能這樣寫</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; f1=<span class="literal">false</span>;</span><br><span class="line">atomic&lt;<span class="keyword">bool</span>&gt; f2=<span class="literal">false</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	f1.store(<span class="literal">true</span>);</span><br><span class="line">	<span class="keyword">if</span> (!f2.load()) &#123;</span><br><span class="line">  	<span class="comment">// critical section</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">thread2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	f2.store(<span class="literal">true</span>);</span><br><span class="line">	<span class="keyword">if</span> (!f1.load()) &#123;</span><br><span class="line">  	<span class="comment">// critical section</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Memory-fence"><a href="#Memory-fence" class="headerlink" title="Memory fence"></a>Memory fence</h2><p>除了上面這些之外，C/C++11還提供了顯式的atomic_thread_fence，目的是為了不同Memory model中的溝通。<br>例如Cppreference這個範例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> num_mailboxes = <span class="number">32</span>;</span><br><span class="line"><span class="built_in">std</span>::atomic&lt;<span class="keyword">int</span>&gt; mailbox[num_mailboxes];</span><br><span class="line"> </span><br><span class="line"><span class="comment">// The writer threads update non-atomic shared data and then update mailbox[i] as follows</span></span><br><span class="line"><span class="built_in">std</span>::atomic_store_explicit(&amp;mailbox[i], receiver_id, <span class="built_in">std</span>::memory_order_release);</span><br><span class="line"> </span><br><span class="line"><span class="comment">// Reader thread needs to check all mailbox[i], but only needs to sync with one</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; num_mailboxes; ++i) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">std</span>::atomic_load_explicit(&amp;mailbox[i], <span class="built_in">std</span>::memory_order_relaxed) == my_id) &#123;</span><br><span class="line">        <span class="built_in">std</span>::atomic_thread_fence(<span class="built_in">std</span>::memory_order_acquire); <span class="comment">// synchronize with just one writer</span></span><br><span class="line">        do_work(i); <span class="comment">// guaranteed to observe everything done in the writer thread before</span></span><br><span class="line">                    <span class="comment">// the atomic_store_explicit()</span></span><br><span class="line">    &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>在Main thread用Release，不過由於在Reader thread用Acquire可能會造成效率上的損失，因此先用relaxeed來檢查，如果發現有mail之後在用上memory fence，後面的reader動作不會被移至前面。</p>
+<h2 id="結論"><a href="#結論" class="headerlink" title="結論"></a>結論</h2><p>這篇是我對Memory Model的總體認知，打了一大堆還是不能解釋的很清楚，這本來就有夠複雜..</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="https://www.youtube.com/watch?v=gpsz8sc6mNU" target="_blank" rel="noopener">The C++ Memory Model</a> <a href="http://meetingcpp.com/tl_files/2014/talks/C++%20Memory%20Model%20-%20Meeting%20C++%202014%20-%20Valentin%20Ziegler.pdf" target="_blank" rel="noopener">Slide</a></li>
+<li>Herb Sutter - atomic&lt;&gt; Weapons <a href="http://channel9.msdn.com/Shows/Going+Deep/Cpp-and-Beyond-2012-Herb-Sutter-atomic-Weapons-1-of-2" target="_blank" rel="noopener">1</a> <a href="http://channel9.msdn.com/Shows/Going+Deep/Cpp-and-Beyond-2012-Herb-Sutter-atomic-Weapons-2-of-2" target="_blank" rel="noopener">2</a> <a href="http://sdrv.ms/NxDB6u" target="_blank" rel="noopener">Slide</a></li>
+<li>[Acquire and Release Fences Don’t Work the Way You’d Expect] (<a href="http://preshing.com/20131125/acquire-and-release-fences-dont-work-the-way-youd-expect/" target="_blank" rel="noopener">http://preshing.com/20131125/acquire-and-release-fences-dont-work-the-way-youd-expect/</a>)</li>
+<li><a href="http://blog.csdn.net/pongba/article/details/1659952" target="_blank" rel="noopener">《C++0x漫谈》系列之：多线程内存模型 </a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/01/02/2015-01-02-singleton-implementation-iand-discussionn-c/" rel="prev" title="Singleton implementation and discussion in C++">
+      <i class="fa fa-chevron-left"></i> Singleton implementation and discussion in C++
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/01/26/2015-01-26-type-safe-handles-in-c/" rel="next" title="Type safe handles in  C++">
+      Type safe handles in  C++ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pre-C-C-11"><span class="nav-number">1.</span> <span class="nav-text">Pre-C&#x2F;C++11</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Synchronize"><span class="nav-number">2.</span> <span class="nav-text">Synchronize</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Atomic"><span class="nav-number">3.</span> <span class="nav-text">Atomic</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sequentially-consistent"><span class="nav-number">3.1.</span> <span class="nav-text">sequentially consistent</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#relaxed"><span class="nav-number">3.2.</span> <span class="nav-text">relaxed</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Acquire-Release-Consume-Release"><span class="nav-number">3.3.</span> <span class="nav-text">Acquire-Release (Consume-Release)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dekker’s-algorithm-revisited"><span class="nav-number">3.4.</span> <span class="nav-text">Dekker’s algorithm revisited</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-fence"><span class="nav-number">4.</span> <span class="nav-text">Memory fence</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#結論"><span class="nav-number">5.</span> <span class="nav-text">結論</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

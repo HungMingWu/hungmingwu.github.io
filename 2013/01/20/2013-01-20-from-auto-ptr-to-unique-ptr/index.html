@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="C語言時期在C語言中，最常遇到的情況就是忘了釋放記憶體，然後造成Memory Leak的問題。例如以下這段程式 1234567891011void LeakDemo(char path1, char path2)&amp;#123;	void *alloc &#x3D; malloc(16);	if (path1) &amp;#123;		free(alloc);		return;	&amp;#125;	if (path2) re">
+<meta property="og:type" content="article">
+<meta property="og:title" content="From auto_ptr to unique_ptr">
+<meta property="og:url" content="http://yoursite.com/2013/01/20/2013-01-20-from-auto-ptr-to-unique-ptr/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="C語言時期在C語言中，最常遇到的情況就是忘了釋放記憶體，然後造成Memory Leak的問題。例如以下這段程式 1234567891011void LeakDemo(char path1, char path2)&amp;#123;	void *alloc &#x3D; malloc(16);	if (path1) &amp;#123;		free(alloc);		return;	&amp;#125;	if (path2) re">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2013-01-20T20:17:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.617Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2013/01/20/2013-01-20-from-auto-ptr-to-unique-ptr/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>From auto_ptr to unique_ptr | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2013/01/20/2013-01-20-from-auto-ptr-to-unique-ptr/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          From auto_ptr to unique_ptr
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2013-01-20 20:17:00" itemprop="dateCreated datePublished" datetime="2013-01-20T20:17:00+00:00">2013-01-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="C語言時期"><a href="#C語言時期" class="headerlink" title="C語言時期"></a>C語言時期</h2><p>在C語言中，最常遇到的情況就是忘了釋放記憶體，然後造成Memory Leak的問題。<br>例如以下這段程式</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">LeakDemo</span><span class="params">(<span class="keyword">char</span> path1, <span class="keyword">char</span> path2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">void</span> *alloc = <span class="built_in">malloc</span>(<span class="number">16</span>);</span><br><span class="line">	<span class="keyword">if</span> (path1) &#123;</span><br><span class="line">		<span class="built_in">free</span>(alloc);</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (path2) <span class="keyword">return</span>;</span><br><span class="line">	<span class="built_in">free</span>(alloc);</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上面這段程式裡面，path2就忘了釋放記憶體，然後造成Leak。<br>這是語言上的侷限，只能靠多檢查source code跟使用工具來減少這種問題。</p>
+<h2 id="C-98時期"><a href="#C-98時期" class="headerlink" title="C++98時期"></a>C++98時期</h2><p>由於C++有<a href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization" target="_blank" rel="noopener">RAII idiom</a>之後，對於釋放記憶體的事情就變得簡單很多了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">StackObject</span> &#123;</span></span><br><span class="line">	<span class="keyword">void</span> *alloc;</span><br><span class="line">	StackObject(<span class="keyword">int</span> <span class="built_in">size</span>) &#123;</span><br><span class="line">		alloc = <span class="built_in">malloc</span>(<span class="built_in">size</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	~StackObject() &#123;</span><br><span class="line">		<span class="built_in">free</span>(alloc);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">NoLeakDemo</span><span class="params">(<span class="keyword">char</span> path1, <span class="keyword">char</span> path2)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function">StackObject <span class="title">s</span><span class="params">(<span class="number">16</span>)</span></span>;</span><br><span class="line">	<span class="keyword">if</span> (path1) <span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">if</span> (path2) <span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而為了一般化，STL裡面時做了一個<code>auto_ptr</code>，利用Template跟RAII的觀念來管理記憶體。</p>
+<h2 id="auto-ptr的問題"><a href="#auto-ptr的問題" class="headerlink" title="auto_ptr的問題"></a>auto_ptr的問題</h2><p>如果把auto_ptr侷限於上面的用法，不會遇上什麼問題，一旦要搭配現有的程式碼，當參數傳來傳去，問題就出現了其中最嚴重的問題莫過於</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Test</span><span class="params">(<span class="built_in">auto_ptr</span>&lt;<span class="keyword">int</span>&gt; v)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="function"><span class="built_in">auto_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">v</span><span class="params">(<span class="keyword">new</span> <span class="keyword">int</span>(<span class="number">4</span>))</span></span>;</span><br><span class="line">        Test(v);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d\n"</span>, *v);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上的程式碼，看起來沒什麼問題，不過實際執行就Crash了。<br>auto_ptr的問題是沒有<strong>Copy Semantics</strong>，他的Copy Constructur裡面做的是Move的動作。<br>以下是auto_ptr的Conpy Constructor實作簡化版</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> _Tp&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">auto_ptr</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	_Tp* _M_ptr;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">auto_ptr</span>(<span class="built_in">auto_ptr</span>&amp; __a) <span class="keyword">throw</span>() : _M_ptr(__a.<span class="built_in">release</span>()) &#123;&#125;</span><br><span class="line">	_Tp* <span class="built_in">release</span>() <span class="keyword">throw</span>()</span><br><span class="line">	&#123;</span><br><span class="line">		element_type* __tmp = _M_ptr;</span><br><span class="line">		_M_ptr = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">return</span> __tmp;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>於是在執行完Test之後，main中的v裡面的pointer就被清空，無法正常使用。<br>由於這個緣故，STL的各種容器跟演算法，搭配上auto_ptr或多或少都有問題。在經過多次修改之後還是無法修復，於是auto_ptr在C++0x之後就標繼承<strong>deprecated</strong>了，不建議使用。<br>由於C++0x引進了Rvalue reference，因此新的unique_ptr就此登場。</p>
+<h2 id="unique-ptr"><a href="#unique-ptr" class="headerlink" title="unique_ptr"></a>unique_ptr</h2><p>unique_ptr能做的事幾乎跟auto_ptr一樣，除了少數例外。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="built_in">auto_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">a</span><span class="params">(<span class="keyword">new</span> <span class="keyword">int</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="built_in">auto_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">b</span><span class="params">(a)</span></span>; <span class="comment">// Compile success, but nosafe</span></span><br><span class="line"><span class="function"><span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">c</span><span class="params">(<span class="keyword">new</span> <span class="keyword">int</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">d</span><span class="params">(c)</span></span>; <span class="comment">// Compile error</span></span><br></pre></td></tr></table></figure>
+<p>不過你也可以利用C++0x新增的Move Semantics，手動進行Move動作。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">c</span><span class="params">(<span class="keyword">new</span> <span class="keyword">int</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">d</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">move</span>(c))</span></span>; <span class="comment">// OK</span></span><br></pre></td></tr></table></figure>
+<p>靠著C++0x新增的<a href="http://thbecker.net/articles/rvalue_references/section_01.html" target="_blank" rel="noopener">Rvalue Reference</a>，區分出Copy跟Move的差異。看著unique_ptr的實作，他只允許Move Constructor，而不允許Copy Constructor。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> _<span class="title">Ty</span>, <span class="title">class</span> _<span class="title">Dx</span>&gt;	</span></span><br><span class="line"><span class="class"><span class="title">class</span> <span class="title">unique_ptr</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="built_in">unique_ptr</span>(<span class="keyword">const</span> _Myt&amp;);				<span class="comment">// not defined</span></span><br><span class="line">	<span class="built_in">unique_ptr</span>&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> _Myt&amp;);		<span class="comment">// not defined</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">unique_ptr</span>(<span class="built_in">unique_ptr</span>&amp;&amp; _Right) 			_NOEXCEPT;</span><br><span class="line">	<span class="built_in">unique_ptr</span>&amp; <span class="keyword">operator</span>=(<span class="built_in">unique_ptr</span>&amp;&amp; _Right)	_NOEXCEPT;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>如果要得到更多的Rvalue Refenece的相關內容，請參考這篇<a href="http://blogs.msdn.com/b/vcblog/archive/2009/02/03/rvalue-references-c-0x-features-in-vc10-part-2.aspx" target="_blank" rel="noopener">Rvalue References: C++0x Features in VC10, Part 2</a>。</p>
+<h2 id="unique-ptr還能做些什麼"><a href="#unique-ptr還能做些什麼" class="headerlink" title="unique_ptr還能做些什麼"></a>unique_ptr還能做些什麼</h2><p>由於C++0x引進了Move Semantics，連帶的STL所有Container跟Algorithmer都支援Move Semantics了，因此這樣的程式碼就變得可行了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="built_in">unique_ptr</span>&lt;<span class="keyword">char</span>&gt; UniCharPtr;</span><br><span class="line"><span class="built_in">vector</span>&lt;UniCharPtr&gt; vc;</span><br><span class="line">vc.push_back(UniCharPtr(<span class="keyword">new</span> <span class="keyword">char</span>(<span class="string">'c'</span>)));</span><br><span class="line">vc.push_back(UniCharPtr(<span class="keyword">new</span> <span class="keyword">char</span>(<span class="string">'b'</span>)));</span><br><span class="line">vc.push_back(UniCharPtr(<span class="keyword">new</span> <span class="keyword">char</span>(<span class="string">'a'</span>)));</span><br><span class="line">sort(vc.<span class="built_in">begin</span>(), vc.<span class="built_in">end</span>(), [] (<span class="keyword">const</span> UniCharPtr &amp;a, <span class="keyword">const</span> UniCharPtr &amp;b) -&gt; <span class="keyword">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> *a &lt; *b;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>在這裡同樣用上了<a href="http://candrews.net/blog/2011/07/understanding-c-0x-lambda-functions/" target="_blank" rel="noopener">lambda expression</a>，留待有空再寫。</p>
+<p>有個手法稱作<a href="http://www.gotw.ca/gotw/025.htm" target="_blank" rel="noopener">source and sink idiom</a><br>因為有了Move Semantics更容易的實現。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt; <span class="title">Source</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt;(<span class="keyword">new</span> <span class="keyword">int</span>); &#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Sink</span><span class="params">(<span class="built_in">unique_ptr</span>&lt;<span class="keyword">int</span>&gt; s)</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">auto</span> source = Source();</span><br><span class="line">Sink(<span class="built_in">std</span>::<span class="built_in">move</span>(source));</span><br></pre></td></tr></table></figure>
+
+<p>除此之外，還能夠自訂Destructor。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> del = [](<span class="keyword">int</span> *p) &#123; </span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">"Deleting x, value is : "</span> &lt;&lt; *p &lt;&lt; <span class="built_in">endl</span>; </span><br><span class="line">	<span class="keyword">delete</span> p;</span><br><span class="line">&#125;;</span><br><span class="line">std::unique_ptr&lt;int, decltype(del)&gt; px(new int(5), del);</span><br></pre></td></tr></table></figure>
+
+<p>以及透過<code>partial specialization</code>來管理一個動態產生的Array。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> del = [](<span class="keyword">int</span> p[]) &#123; <span class="keyword">delete</span> [] p; &#125;;</span><br><span class="line">std::unique_ptr&lt;int [], decltype(del)&gt; px(new int[5], del);</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2013/01/14/2013-01-14-delete-item-from-a-singly-linked-linear-list/" rel="prev" title="如何從一個Singly linked linear list中刪除資料">
+      <i class="fa fa-chevron-left"></i> 如何從一個Singly linked linear list中刪除資料
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2013/01/28/2013-01-28-lambda-expression-in-c-plus-plus-0x/" rel="next" title="Lambda Expression in C++11">
+      Lambda Expression in C++11 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#C語言時期"><span class="nav-number">1.</span> <span class="nav-text">C語言時期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#C-98時期"><span class="nav-number">2.</span> <span class="nav-text">C++98時期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#auto-ptr的問題"><span class="nav-number">3.</span> <span class="nav-text">auto_ptr的問題</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#unique-ptr"><span class="nav-number">4.</span> <span class="nav-text">unique_ptr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#unique-ptr還能做些什麼"><span class="nav-number">5.</span> <span class="nav-text">unique_ptr還能做些什麼</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

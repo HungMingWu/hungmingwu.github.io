@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Singleton這個題目酸燃被出到爛了，不過變化實在千變萬化。列出幾種不錯的解決方式。 Meyers version123456789class Singleton &amp;#123;private:        Singleton() &amp;#123;&amp;#125;public:        static Singleton&amp; getInstance() &amp;#123;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Singleton implementation and discussion in C++">
+<meta property="og:url" content="http://yoursite.com/2015/01/02/2015-01-02-singleton-implementation-iand-discussionn-c/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="Singleton這個題目酸燃被出到爛了，不過變化實在千變萬化。列出幾種不錯的解決方式。 Meyers version123456789class Singleton &amp;#123;private:        Singleton() &amp;#123;&amp;#125;public:        static Singleton&amp; getInstance() &amp;#123;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2015-01-02T13:46:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.622Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2015/01/02/2015-01-02-singleton-implementation-iand-discussionn-c/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Singleton implementation and discussion in C++ | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/01/02/2015-01-02-singleton-implementation-iand-discussionn-c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Singleton implementation and discussion in C++
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-01-02 13:46:00" itemprop="dateCreated datePublished" datetime="2015-01-02T13:46:00+00:00">2015-01-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/" itemprop="url" rel="index"><span itemprop="name">c++</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/C-11/" itemprop="url" rel="index"><span itemprop="name">C++11</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/C-11/Multithread/" itemprop="url" rel="index"><span itemprop="name">Multithread</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Singleton這個題目酸燃被出到爛了，不過變化實在千變萬化。列出幾種不錯的解決方式。</p>
+<h2 id="Meyers-version"><a href="#Meyers-version" class="headerlink" title="Meyers version"></a>Meyers version</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        Singleton() &#123;&#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> Singleton&amp; <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">static</span> Singleton instance;</span><br><span class="line">                <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>非常有名的實作方式，在C++11的環境下是Thread-safe的，而C++98沒有這種保證。可以參考<a href="http://stackoverflow.com/questions/1661529/is-meyers-implementation-of-singleton-pattern-thread-safe" target="_blank" rel="noopener">Is Meyers implementation of Singleton pattern thread safe?</a>這個討論串。<br>GCC預設編譯時開啟static threadsafe的選項，所以C++11的程式碼可以正確運行，可以強制使用<code>-fno-threadsafe-statics</code>關閉這功能。可以參考<a href="http://stackoverflow.com/questions/1270927/are-function-static-variables-thread-safe-in-gcc" target="_blank" rel="noopener">Are function static variables thread-safe in GCC?</a></p>
+<a id="more"></a>
+<h2 id="call-once-and-once-flag"><a href="#call-once-and-once-flag" class="headerlink" title="call_once and once_flag"></a>call_once and once_flag</h2><p>C++11新增的call_once功能可以保證函數只執行一次，因此可以拿來用在Singleton的建立上。libuve也有類似的thread-safe callonce功能。C語言如果有需要的話可以從那邊找答案。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;mutex&gt;</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        <span class="keyword">static</span> <span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;Singleton&gt; instance;</span><br><span class="line">        <span class="keyword">static</span> <span class="built_in">std</span>::once_flag initInstanceFlag;</span><br><span class="line">        Singleton() &#123;&#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> Singleton&amp; <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="built_in">std</span>::call_once(initInstanceFlag, []() &#123;</span><br><span class="line">                        instance.reset(<span class="keyword">new</span> Singleton());</span><br><span class="line">                &#125;);</span><br><span class="line">                <span class="keyword">return</span> *instance;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">std</span>::once_flag Singleton::initInstanceFlag;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;Singleton&gt; Singleton::instance;</span><br></pre></td></tr></table></figure>
+<h2 id="自行打造輪子的作法"><a href="#自行打造輪子的作法" class="headerlink" title="自行打造輪子的作法"></a>自行打造輪子的作法</h2><p>為了練功，有時自己倒造輪子可以有更深一曾的了解</p>
+<h3 id="Thread-safe-lock-version"><a href="#Thread-safe-lock-version" class="headerlink" title="Thread-safe lock version"></a>Thread-safe lock version</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;memory&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        <span class="keyword">static</span> <span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;Singleton&gt; instance;</span><br><span class="line">        <span class="keyword">static</span> <span class="built_in">std</span>::mutex instanceMutex;</span><br><span class="line">        Singleton() &#123;&#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> Singleton&amp; <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="function"><span class="built_in">std</span>::lock_guard&lt;<span class="built_in">std</span>::mutex&gt; <span class="title">lock</span><span class="params">(instanceMutex)</span></span>;</span><br><span class="line">                <span class="keyword">if</span> (!instance)</span><br><span class="line">                        instance.reset(<span class="keyword">new</span> Singleton());</span><br><span class="line">                <span class="keyword">return</span> *instance;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">std</span>::mutex Singleton::instanceMutex;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;Singleton&gt; Singleton::instance;</span><br></pre></td></tr></table></figure>
+<p>這個版本很簡單，在每個Thread呼叫getInstance時就獲取Lock，因此可以保證Constructor只會有一個Thread執行，不過這方式的缺點也很明顯，當建立完singleton之後就不需Lock了。</p>
+<h3 id="Double-Checked-Locking"><a href="#Double-Checked-Locking" class="headerlink" title="Double-Checked Locking"></a>Double-Checked Locking</h3><p>最受爭議的實作方式，原因不是在於程式碼有問題，而是Compiler &amp; Cpu不會照程式碼所預料的方式行動。最原始寫法是這樣</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Singleton&amp; <span class="title">Singleton::instance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!pInstance) &#123; <span class="comment">// 1st test</span></span><br><span class="line">		Lock lock;</span><br><span class="line">		<span class="keyword">if</span> (!pInstance) <span class="comment">// 2nd test</span></span><br><span class="line">			pInstance.reset(<span class="keyword">new</span> Singleton);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> *pInstance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>這個問題的原因很複雜，可以看這兩篇文章</p>
+<ul>
+<li><a href="http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html" target="_blank" rel="noopener">The “Double-Checked Locking is Broken” Declaration </a></li>
+<li><a href="http://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf" target="_blank" rel="noopener">C++ and the Perils of Double-Checked Locking</a></li>
+<li><a href="http://nwcpp.org/talks/2004/DCLP_notes.pdf" target="_blank" rel="noopener">Double-Checked Locking, Threads, Compiler Optimizations, and More</a><br>根據論文最後，可以看到一個可行的解<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Singleton* <span class="title">Singleton::instance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	Singleton *tmp = pInstance;</span><br><span class="line">	...  <span class="comment">// need memory barrier</span></span><br><span class="line">	<span class="keyword">if</span> (tmp == <span class="number">0</span>) &#123; <span class="comment">// 1st test</span></span><br><span class="line">		Lock lock;</span><br><span class="line">		tmp = pInstance;</span><br><span class="line">		<span class="keyword">if</span>(tmp == <span class="number">0</span>) &#123; <span class="comment">// 2nd test</span></span><br><span class="line">			tmp  = <span class="keyword">new</span> Singleton;</span><br><span class="line">			...  <span class="comment">// need memory barrier</span></span><br><span class="line">			pInstance = tmp;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> pInstance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+需要Memory barrier的部份，由於C++98對此沒有規範，所以只能靠Compiler個顯神吞。<h3 id="Double-Checked-Locking-revisited"><a href="#Double-Checked-Locking-revisited" class="headerlink" title="Double-Checked Locking revisited"></a>Double-Checked Locking revisited</h3>在C++11之後，引進了atomic操作。因此上面的方式變得可能。<br>實際寫了一下，目前的atomic跟unique_ptr不能共用，等待<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4058.pdf" target="_blank" rel="noopener">N4058 - Atomic Smart Pointers</a>哪一天能通過。現在先用Raw pointer來做。<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;atomic&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;mutex&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        <span class="keyword">static</span> <span class="built_in">std</span>::atomic&lt;Singleton *&gt; instance;</span><br><span class="line">        <span class="keyword">static</span> <span class="built_in">std</span>::mutex instanceMutex;</span><br><span class="line">        Singleton() &#123;&#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> Singleton&amp; <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                Singleton* tmp = instance.load(<span class="built_in">std</span>::memory_order_relaxed);</span><br><span class="line">                <span class="built_in">std</span>::atomic_thread_fence(<span class="built_in">std</span>::memory_order_acquire);</span><br><span class="line">                <span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">                        <span class="function"><span class="built_in">std</span>::lock_guard&lt;<span class="built_in">std</span>::mutex&gt; <span class="title">lock</span><span class="params">(instanceMutex)</span></span>;</span><br><span class="line">                        tmp = instance.load(<span class="built_in">std</span>::memory_order_relaxed);</span><br><span class="line">                        <span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">                                tmp = <span class="keyword">new</span> Singleton;</span><br><span class="line">                                <span class="built_in">std</span>::atomic_thread_fence(<span class="built_in">std</span>::memory_order_release);</span><br><span class="line">                                instance.store(tmp, <span class="built_in">std</span>::memory_order_relaxed);</span><br><span class="line">                        &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> *tmp;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">std</span>::mutex Singleton::instanceMutex;</span><br><span class="line"><span class="built_in">std</span>::atomic&lt;Singleton *&gt; Singleton::instance;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>以下這幾種方式是從 Binary Hacks學來的</p>
+<h2 id="Thread-local-storage-based-solution"><a href="#Thread-local-storage-based-solution" class="headerlink" title="Thread-local storage based solution"></a>Thread-local storage based solution</h2><p>雖然這跟Singleton的定義不太相同，每個Thread擁有自己的Singleton，如此之來就不用加任何Lock了，如果對此計較的話不是用。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        Singleton() &#123;&#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> Singleton&amp; <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">static</span> <span class="keyword">thread_local</span> <span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;Singleton&gt; instance;</span><br><span class="line">                <span class="keyword">if</span> (!instance)</span><br><span class="line">                        instance.reset(<span class="keyword">new</span> Singleton());</span><br><span class="line">                <span class="keyword">return</span> *instance;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="Self-Modification-Code"><a href="#Self-Modification-Code" class="headerlink" title="Self Modification Code"></a>Self Modification Code</h2><p>運用<a href="http://c2.com/cgi/wiki?SelfModifyingCode" target="_blank" rel="noopener">Self Modification Code</a>這種高等技巧，在第一次執行完getInstance()之後，就把整個程式碼寫成類似這樣的情形，不過這需要對Target Architecture相當的熟悉，又不能跨平台，只能當種炫技。不過SMC的技術有時間可以練練。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">        Singleton() &#123;&#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> Singleton&amp; <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> *instance;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/" target="_blank" rel="noopener">Double-Checked Locking Is Fixed In C++11</a></li>
+<li>Binary Hacks：駭客秘傳技巧一百招</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2014/12/28/2014-12-28-online-learning-resource/" rel="prev" title="Online learning Resource">
+      <i class="fa fa-chevron-left"></i> Online learning Resource
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/01/17/2015-01-17-memory-model-for-c-cpp-11/" rel="next" title="Memory Model for C/C++11">
+      Memory Model for C/C++11 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Meyers-version"><span class="nav-number">1.</span> <span class="nav-text">Meyers version</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#call-once-and-once-flag"><span class="nav-number">2.</span> <span class="nav-text">call_once and once_flag</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自行打造輪子的作法"><span class="nav-number">3.</span> <span class="nav-text">自行打造輪子的作法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Thread-safe-lock-version"><span class="nav-number">3.1.</span> <span class="nav-text">Thread-safe lock version</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Double-Checked-Locking"><span class="nav-number">3.2.</span> <span class="nav-text">Double-Checked Locking</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Double-Checked-Locking-revisited"><span class="nav-number">3.3.</span> <span class="nav-text">Double-Checked Locking revisited</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Thread-local-storage-based-solution"><span class="nav-number">4.</span> <span class="nav-text">Thread-local storage based solution</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Self-Modification-Code"><span class="nav-number">5.</span> <span class="nav-text">Self Modification Code</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

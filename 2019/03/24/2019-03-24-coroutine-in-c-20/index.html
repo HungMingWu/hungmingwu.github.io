@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="既然C++20把Coroutine列為標準配備之後，必須試著了解玩法從最簡單的範例開始 The simplest coroutine example1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950#include &lt;iostream&gt;#include &amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Coroutine in C++20">
+<meta property="og:url" content="http://yoursite.com/2019/03/24/2019-03-24-coroutine-in-c-20/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="既然C++20把Coroutine列為標準配備之後，必須試著了解玩法從最簡單的範例開始 The simplest coroutine example1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950#include &lt;iostream&gt;#include &amp;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-03-24T11:36:00.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.627Z">
+<meta property="article:author" content="HungMingWu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2019/03/24/2019-03-24-coroutine-in-c-20/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Coroutine in C++20 | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/24/2019-03-24-coroutine-in-c-20/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Coroutine in C++20
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-03-24 11:36:00" itemprop="dateCreated datePublished" datetime="2019-03-24T11:36:00+00:00">2019-03-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C++</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>既然C++20把Coroutine列為標準配備之後，必須試著了解玩法<br>從最簡單的範例開始</p>
+<h3 id="The-simplest-coroutine-example"><a href="#The-simplest-coroutine-example" class="headerlink" title="The simplest coroutine example"></a>The simplest coroutine example</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;experimental/coroutine&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CORETURN_ENABLE</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">generator</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">promise_type</span> &#123;</span></span><br><span class="line">		<span class="keyword">int</span> current_value;</span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">initial_suspend</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">std</span>::experimental::suspend_always&#123;&#125;; &#125;</span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">final_suspend</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">std</span>::experimental::suspend_always&#123;&#125;; &#125;</span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">get_return_object</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> generator&#123;handle_type::from_promise(*<span class="keyword">this</span>)&#125;; &#125;</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">unhandled_exception</span><span class="params">()</span> </span>&#123; <span class="built_in">std</span>::<span class="built_in">exit</span>(<span class="number">1</span>); &#125;</span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">yield_value</span><span class="params">(<span class="keyword">int</span> v)</span> </span>&#123; </span><br><span class="line">			current_value = v; </span><br><span class="line">			<span class="keyword">return</span> <span class="built_in">std</span>::experimental::suspend_always&#123;&#125;; </span><br><span class="line">		&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CORETURN_ENABLE</span></span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">return_value</span><span class="params">(<span class="keyword">int</span> v)</span> </span>&#123;</span><br><span class="line">			current_value = v;</span><br><span class="line">		&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">return_void</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	&#125;;</span><br><span class="line">	<span class="function"><span class="keyword">bool</span> <span class="title">move_next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		coro.resume();</span><br><span class="line">		<span class="keyword">return</span> !coro.done();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">current_value</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> coro.promise().current_value; &#125;</span><br><span class="line">	<span class="keyword">using</span> handle_type =	<span class="built_in">std</span>::experimental::coroutine_handle&lt;promise_type&gt;;</span><br><span class="line">	handle_type coro;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function">generator <span class="title">count</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">co_yield</span> <span class="number">42</span>;</span><br><span class="line">	<span class="keyword">co_yield</span> <span class="number">56</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CORETURN_ENABLE</span></span><br><span class="line">	<span class="keyword">co_return</span> <span class="number">999</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">auto</span> g = count();</span><br><span class="line">	<span class="keyword">while</span> (g.move_next())</span><br><span class="line">		<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; g.current_value() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CORETURN_ENABLE</span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; g.current_value() &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>假設我們有一個Coroutine的程式碼片段，例如</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TRet, <span class="keyword">typename</span> … TArgs&gt;</span><br><span class="line"><span class="function">TRet <span class="title">func</span><span class="params">(TArgs args…)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    body;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>邊義氣會幫我們做類似這樣的處理</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TRet, <span class="keyword">typename</span> ... TArgs&gt;</span><br><span class="line"><span class="function">TRet <span class="title">func</span><span class="params">(TArgs args...)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">using</span> <span class="keyword">promise_t</span> = <span class="keyword">typename</span> coroutine_traits&lt;TRet, TArgs...&gt;::promise_type;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">promise_t</span> promise;</span><br><span class="line">    <span class="keyword">auto</span> __return__ = promise.get_return_object();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">co_await</span> promise.initial_suspend();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span></span><br><span class="line">    &#123;            <span class="comment">// co_return expr; =&gt; promise.return_value(expr); goto final_suspend;</span></span><br><span class="line">        body;    <span class="comment">// co_return;      =&gt; promise.return_void(); goto final_suspend;</span></span><br><span class="line">    &#125;            <span class="comment">// co_yield expr;  =&gt; co_await promise.yield_value(expr);</span></span><br><span class="line">    <span class="keyword">catch</span> (...)</span><br><span class="line">    &#123;</span><br><span class="line">        promise.set_exception(<span class="built_in">std</span>::current_exception());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">final_suspend:</span><br><span class="line">    <span class="keyword">co_await</span> promise.final_suspend();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>對照Pseudo code <code>func</code>和上面範例的<code>count</code>ˇ以及<code>promise_t</code>和<code>generator::promise_type</code>明白了一些東西</p>
+<p>– 任何包含<code>co_yield</code>，<code>co_return</code>或者<code>co_await</code>的程式碼都是<code>corutine block</code>，必須定義一個structure，而這個structure必須有個promise_type<br>– promeise_type需要六個函數， <code>return_value</code>和<code>return_void</code>不可同時存在<br>– 中間狀態必須保存在promise_type中<br>– 當<code>co_yield</code>交出控制權之後，必須使用<code>coro.resume()</code>恢復執行</p>
+<p>以下討論另外一個關鍵字 <code>co_await</code></p>
+<h3 id="co-await"><a href="#co-await" class="headerlink" title="co_await"></a>co_await</h3><p>先從古早時期的Callback說起，給出一個範例</p>
+<h4 id="From-a-callback-start"><a href="#From-a-callback-start" class="headerlink" title="From a callback start"></a>From a callback start</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> call_back = <span class="built_in">std</span>::function&lt;<span class="keyword">void</span>(<span class="keyword">int</span>)&gt;;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Add100ByCallback</span><span class="params">(<span class="keyword">int</span> init, call_back f)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function"><span class="built_in">std</span>::thread <span class="title">t</span><span class="params">([init, f]() &#123;</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="built_in">std</span>::this_thread::sleep_for(<span class="built_in">std</span>::chrono::seconds(<span class="number">1</span>));</span></span></span><br><span class="line"><span class="function"><span class="params">		f(init + <span class="number">100</span>);</span></span></span><br><span class="line"><span class="function"><span class="params">	&#125;)</span></span>;</span><br><span class="line">	t.detach();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	Add100ByCallback(<span class="number">10</span>, [](<span class="keyword">int</span> v) &#123;</span><br><span class="line">		<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; v &lt;&lt; <span class="string">"\n"</span>;</span><br><span class="line">	&#125;);</span><br><span class="line">	<span class="built_in">std</span>::this_thread::sleep_for(<span class="built_in">std</span>::chrono::seconds(<span class="number">5</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>程式本身沒有什麼意義，只是模擬長時間處理的情形</p>
+<h4 id="Awaitable-object"><a href="#Awaitable-object" class="headerlink" title="Awaitable object"></a>Awaitable object</h4><p>Coroutine版根據上面的版本修改，新增了一些東西</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Task</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">promise_type</span> &#123;</span></span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">get_return_object</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Task&#123;&#125;; &#125;</span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">initial_suspend</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">std</span>::experimental::suspend_never&#123;&#125;; &#125;</span><br><span class="line">		<span class="function"><span class="keyword">auto</span> <span class="title">final_suspend</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">std</span>::experimental::suspend_never&#123;&#125;; &#125;</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">unhandled_exception</span><span class="params">()</span> </span>&#123; <span class="built_in">std</span>::<span class="built_in">terminate</span>(); &#125;</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">return_void</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">	&#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Add100AWaitable</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	Add100AWaitable(<span class="keyword">int</span> init) :init_(init) &#123;&#125;</span><br><span class="line">	<span class="function"><span class="keyword">bool</span> <span class="title">await_ready</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> <span class="literal">false</span>; &#125;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">await_resume</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> result_; &#125;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">await_suspend</span><span class="params">(<span class="built_in">std</span>::experimental::coroutine_handle&lt;&gt; handle)</span></span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="keyword">auto</span> f = [handle, <span class="keyword">this</span>](<span class="keyword">int</span> value) <span class="keyword">mutable</span> &#123;</span><br><span class="line">			result_ = value;</span><br><span class="line">			handle.resume(); </span><br><span class="line">		&#125;;</span><br><span class="line">		Add100ByCallback(init_, f);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">int</span> init_;</span><br><span class="line">	<span class="keyword">int</span> result_;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">Task <span class="title">Add100ByCoroutine</span><span class="params">(<span class="keyword">int</span> init, call_back f)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"Before co_await: "</span> &lt;&lt;<span class="built_in">std</span>::this_thread::get_id() &lt;&lt; <span class="string">"\n"</span>;</span><br><span class="line">	<span class="keyword">int</span> ret = <span class="keyword">co_await</span> Add100AWaitable(init);</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"After co_await: "</span> &lt;&lt; <span class="built_in">std</span>::this_thread::get_id() &lt;&lt; <span class="string">"\n"</span>;</span><br><span class="line">	f(ret);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的Task不需要多做介紹，<code>Add100ByCoroutine</code>也不需要多說些什麼<br>直接看<code>Add100AWaitable</code>的部分<br>同樣的<code>Add100AWaitable</code>也有必須要注意的點<br>– 中間值一樣存在 <code>Awaitable object</code>中<br>– 必須有<code>await_ready</code>，<code>await_resume</code>和<code>await_suspend</code>的存在<br>– 以上面的例子來看，當Callback完成之後，我們手動讓Coroutine繼續執行上去<br>– 呼叫Add100ByCoroutine和corutime resume的Thread不一定是同一個，需要把狀態保留到awaitable object中</p>
+<h4 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h4><p><a href="https://kirit.com/How%20C%2B%2B%20coroutines%20work" target="_blank" rel="noopener">How C++ coroutines work</a><br><a href="https://lewissbaker.github.io/2017/09/25/coroutine-theory" target="_blank" rel="noopener">Coroutine Theory</a><br><a href="https://msdn.microsoft.com/en-us/magazine/mt826346" target="_blank" rel="noopener">From Algorithms to Coroutines in C++</a><br><a href="https://toby-allsopp.github.io/2017/04/22/coroutines-reference-params.html" target="_blank" rel="noopener">Coroutines and Reference Parameters</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/03/20/2019-03-20-pythagorean-triples-code/" rel="prev" title="Pythagorean Triples Code">
+      <i class="fa fa-chevron-left"></i> Pythagorean Triples Code
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/06/03/2019-06-03-useful-tips-for-python-programming/" rel="next" title="Useful Tips for Python Programming">
+      Useful Tips for Python Programming <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#The-simplest-coroutine-example"><span class="nav-number">1.</span> <span class="nav-text">The simplest coroutine example</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分析"><span class="nav-number">2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#co-await"><span class="nav-number">3.</span> <span class="nav-text">co_await</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#From-a-callback-start"><span class="nav-number">3.1.</span> <span class="nav-text">From a callback start</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Awaitable-object"><span class="nav-number">3.2.</span> <span class="nav-text">Awaitable object</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Reference"><span class="nav-number">3.3.</span> <span class="nav-text">Reference</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

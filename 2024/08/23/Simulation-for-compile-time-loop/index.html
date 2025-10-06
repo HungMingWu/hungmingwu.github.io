@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="問題說來很簡單，結果我花了好久才搞懂，字字血淚我想要的只有這樣的效果 12345678template &lt;std::size_t i&gt;void inner() &amp;#123;&amp;#125;tempplate &lt;std::size_t N&gt;void outer() &amp;#123;    for (std::size_t i &#x3D; 0; i &lt; N; i++)        in">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Simulation for compile-time loop">
+<meta property="og:url" content="http://yoursite.com/2024/08/23/Simulation-for-compile-time-loop/index.html">
+<meta property="og:site_name" content="第十三號艦隊">
+<meta property="og:description" content="問題說來很簡單，結果我花了好久才搞懂，字字血淚我想要的只有這樣的效果 12345678template &lt;std::size_t i&gt;void inner() &amp;#123;&amp;#125;tempplate &lt;std::size_t N&gt;void outer() &amp;#123;    for (std::size_t i &#x3D; 0; i &lt; N; i++)        in">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-08-23T16:03:05.000Z">
+<meta property="article:modified_time" content="2025-10-06T01:47:17.629Z">
+<meta property="article:author" content="HungMingWu">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://yoursite.com/2024/08/23/Simulation-for-compile-time-loop/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Simulation for compile-time loop | 第十三號艦隊</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">第十三號艦隊</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/HungMingWu" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2024/08/23/Simulation-for-compile-time-loop/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HungMingWu">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="第十三號艦隊">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Simulation for compile-time loop
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-08-23 16:03:05" itemprop="dateCreated datePublished" datetime="2024-08-23T16:03:05+00:00">2024-08-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-06 01:47:17" itemprop="dateModified" datetime="2025-10-06T01:47:17+00:00">2025-10-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>問題說來很簡單，結果我花了好久才搞懂，字字血淚<br>我想要的只有這樣的效果</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> i&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">inner</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">tempplate &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">outer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">std</span>::<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">        inner&lt;i&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>結果這樣是無法編譯的，只好找其他方法繞過</p>
+<h3 id="Solution-1-Template-specialization"><a href="#Solution-1-Template-specialization" class="headerlink" title="Solution 1: Template specialization"></a>Solution 1: Template specialization</h3><p>一樣是從別人的Code上學來的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> i&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">inner</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">helper</span> &#123;</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Indices = <span class="built_in">std</span>::make_index_sequence&lt;N&gt;&gt;</span><br><span class="line">    struct _helper;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span>... Idx&gt;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> _<span class="title">helper</span>&lt;std::index_sequence&lt;Idx...&gt;&gt; &#123;</span></span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">unroll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            (inner&lt;Idx&gt;(), ...);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">outer</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        helper&lt;N&gt;::<span class="keyword">template</span> _helper&lt;&gt;::unroll();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在這邊</p>
+<ul>
+<li><code>_helper</code>會有兩個Template definition，而由於<code>_helper&lt;std::index_sequence&lt;Idx...&gt;&gt;</code>的契合度比primary template好，所以會選擇這個definition</li>
+<li>然後就用fold expression展開了</li>
+<li>不過實在是太醜了，思考有無其他的方案<h3 id="Fail-attempt"><a href="#Fail-attempt" class="headerlink" title="Fail attempt:"></a>Fail attempt:</h3>在求助於AI之下，嘗試了其他方案<h4 id="std-apply-and-std-make-integer-sequence"><a href="#std-apply-and-std-make-integer-sequence" class="headerlink" title="std::apply and std::make_integer_sequence"></a>std::apply and std::make_integer_sequence</h4>這個是Claude提供的<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> i&gt; <span class="function"><span class="keyword">void</span> <span class="title">inner</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">size_t</span> N&gt; </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">outer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::apply([](<span class="keyword">auto</span>... indices) &#123; (inner&lt;indices&gt;(), ...); &#125;, <span class="built_in">std</span>::make_index_sequence&lt;N&gt;&#123;&#125;); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+結果是不能用，<code>std::apply</code>需要接受一個<code>tuple like</code>的參數，很可惜這不是<br>於是先擱置在一旁，不過這個方案接近我最後的方案，還是感激一下AI<h4 id="Custom-apply-function"><a href="#Custom-apply-function" class="headerlink" title="Custom apply function"></a>Custom apply function</h4>這個是GPT4-o提供的<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">size_t</span>... Indices&gt; </span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">apply_impl</span><span class="params">(F&amp;&amp; f, <span class="built_in">std</span>::index_sequence&lt;Indices...&gt;)</span> </span>&#123;</span><br><span class="line">    (f(<span class="built_in">std</span>::integral_constant&lt;<span class="keyword">size_t</span>, Indices&gt;&#123;&#125;), ...); </span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">outer</span> &#123;</span> </span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        apply_impl([](<span class="keyword">auto</span> index) &#123; inner&lt;index&gt;(); &#125;,     <span class="built_in">std</span>::make_index_sequence&lt;N&gt;&#123;&#125;); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+將fold expression隱藏於實作中，雖然不錯，不過這方法也是有其缺點<br>無法表示這樣的Pseudo code<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> i&gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">inner</span><span class="params">()</span> </span>&#123; </span><br><span class="line">   <span class="keyword">if</span> (i == <span class="number">1</span>) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">   <span class="keyword">else</span> <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">tempplate &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">outer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">std</span>::<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; N; i++)</span><br><span class="line">        <span class="keyword">if</span> (!inner&lt;i&gt;()) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+萬能的CharGPT也給了一個思路，拓展apply_impl<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">size_t</span> First, <span class="keyword">size_t</span>... Rest&gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">apply_impl</span><span class="params">(F&amp;&amp; f, <span class="built_in">std</span>::index_sequence&lt;First, Rest...&gt;)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!f(<span class="built_in">std</span>::integral_constant&lt;<span class="keyword">size_t</span>, First&gt;&#123;&#125;)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> apply_impl(f, <span class="built_in">std</span>::index_sequence&lt;Rest...&gt;&#123;&#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> F&gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">apply_impl</span><span class="params">(F&amp;&amp;, <span class="built_in">std</span>::index_sequence&lt;&gt;)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+看起來可行，不過也是有自己的問題</li>
+<li>當你邏輯改變，例如將all_true或城anyone_true的時候，上面的apply_impl就要改了</li>
+<li>當Callback function有無回傳值的情況，就要考慮很多地方，整個邏輯也會變得支離破碎，不好維護<br>因此，想出了自己的方案<h3 id="Solution2-make-index-sequence-tuple"><a href="#Solution2-make-index-sequence-tuple" class="headerlink" title="Solution2:  make_index_sequence_tuple"></a>Solution2:  make_index_sequence_tuple</h3>查了一下資料<code>std::apply</code>接受的是<code>tuple like</code>的類型，那麼就自己做出一個<code>tuple like</code> 的<code>index_sequqence</code>就好了<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span>... Idx&gt;</span><br><span class="line"><span class="keyword">constexpr</span> <span class="keyword">auto</span> _make_index_sequence_tuple(<span class="built_in">std</span>::index_sequence&lt;Idx...&gt;)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">std</span>::make_tuple(<span class="built_in">std</span>::integral_constant&lt;<span class="built_in">std</span>::<span class="keyword">size_t</span>, Idx&gt;()...);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line"><span class="function"><span class="keyword">constexpr</span> <span class="keyword">auto</span> <span class="title">make_index_sequence_tuple</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> _make_index_sequence_tuple(<span class="built_in">std</span>::make_index_sequence&lt;N&gt;&#123;&#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">outer</span> &#123;</span></span><br><span class="line">        <span class="keyword">template</span> &lt;<span class="built_in">std</span>::<span class="keyword">size_t</span> N&gt;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="built_in">std</span>::apply([](<span class="keyword">auto</span>... indices) &#123;</span><br><span class="line">                (inner&lt;indices&gt;(), ...); &#125;,</span><br><span class="line">                make_index_sequence_tuple&lt;N&gt;()</span><br><span class="line">            );</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+這樣就沒啥問題了<h3 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h3>AI生成的Source Code還是不能照單全收，不過提供個思路總是好的<br>不過更好的方法應該是template for，不過不知會部會進標準</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/08/09/deduce-this-for-API-design/" rel="prev" title="deduce this for API design">
+      <i class="fa fa-chevron-left"></i> deduce this for API design
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/09/06/Revisit-C-20-Module-and-CMake/" rel="next" title="Revisit C++20 Module and CMake">
+      Revisit C++20 Module and CMake <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Solution-1-Template-specialization"><span class="nav-number">1.</span> <span class="nav-text">Solution 1: Template specialization</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fail-attempt"><span class="nav-number">2.</span> <span class="nav-text">Fail attempt:</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#std-apply-and-std-make-integer-sequence"><span class="nav-number">2.1.</span> <span class="nav-text">std::apply and std::make_integer_sequence</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Custom-apply-function"><span class="nav-number">2.2.</span> <span class="nav-text">Custom apply function</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Solution2-make-index-sequence-tuple"><span class="nav-number">3.</span> <span class="nav-text">Solution2:  make_index_sequence_tuple</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Conclusion"><span class="nav-number">4.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HungMingWu</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">258</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">148</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HungMingWu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
